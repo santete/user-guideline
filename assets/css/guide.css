@@ -1,5 +1,8 @@
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; }
-.container { background-color: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.container { background-color: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
+.breadcrumb { margin-bottom: 20px; }
+.back-link { display: inline-flex; align-items: center; gap: 8px; color: #3b82f6; text-decoration: none; font-weight: bold; font-size: 0.95em; transition: color 0.2s, transform 0.2s; background: #eff6ff; padding: 8px 16px; border-radius: 20px; border: 1px solid #bfdbfe; }
+.back-link:hover { color: #1e3a8a; background: #dbeafe; transform: translateX(-4px); }
 h1 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 30px;}
 h2 { color: #2980b9; margin-top: 40px; display: flex; align-items: center; font-size: 1.3em;}
 h2 span { background-color: #3498db; color: white; border-radius: 50%; width: 32px; height: 32px; display: inline-flex; justify-content: center; align-items: center; margin-right: 12px; font-size: 16px; font-weight: bold;}
