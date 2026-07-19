@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Cẩm Nang Chuyển Đổi: Từ Windows Sang Ubuntu Dành Cho Dân Văn Phòng & IT</title>
+    <link rel="icon" type="image/png" href="../../assets/images/favicon.png">
+    <link rel="stylesheet" href="../../assets/css/guide.css?v=3">
+</head>
+<body>
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="../../index.html" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Trở về Trang chủ
+            </a>
+        </nav>
+        <h1>Cẩm Nang Sinh Tồn:<br>Chuyển Đổi Từ Windows Sang Ubuntu</h1>
+        <p style="text-align: center; font-size: 1.1em; color: #555;">Bí kíp giúp dân Văn phòng, IT, Design, Data chuyển nhà sang Linux một cách mượt mà nhất trước làn sóng rà soát bản quyền phần mềm.</p>
+
+        <div class="important-note">
+            <strong>💡 BỐI CẢNH:</strong> Hiện nay, việc rà soát và kiểm duyệt bản quyền phần mềm (Windows, Microsoft Office, Adobe...) tại các doanh nghiệp diễn ra rất gắt gao. Chuyển sang sử dụng hệ điều hành mã nguồn mở (Ubuntu) là giải pháp An Toàn, Hợp Pháp, Miễn Phí và Tối Ưu nhất.
+        </div>
+
+        <h2><span>1</span> Ánh xạ phần mềm: Không lo "mất đồ nghề"</h2>
+        <div class="step">
+            <p>Dù bạn ở vị trí nào, thế giới Open Source luôn có phần mềm tương đương để bạn làm việc:</p>
+            <ul>
+                <li><strong>👔 Khối Văn phòng (Back Office):</strong> Sử dụng <strong>WPS Office</strong> hoặc LibreOffice. Giao diện và cách dùng giống Microsoft Word, Excel, PowerPoint đến 99%.</li>
+                <li><strong>💻 Khối Developer:</strong> Ubuntu là thiên đường! Mọi công cụ như VS Code, Docker, Git, IntelliJ, DBeaver đều hỗ trợ Native, chạy nhanh và mượt hơn Windows.</li>
+                <li><strong>🎨 Khối Design:</strong> Sử dụng <strong>Figma</strong> (trên trình duyệt), <strong>GIMP</strong> (thay Photoshop), <strong>Inkscape</strong> (thay Illustrator).</li>
+                <li><strong>📊 Khối Data / Business Analytics:</strong> Dễ dàng cài đặt Python, Anaconda, TablePlus, Metabase, PowerBI (qua Web).</li>
+            </ul>
+        </div>
+
+        <h2><span>2</span> Đồng bộ Dữ liệu Trình duyệt (Rất quan trọng)</h2>
+        <div class="step">
+            <p>Trước khi chia tay Windows, bạn cần đẩy toàn bộ Bookmark (Dấu trang), Mật khẩu và Lịch sử duyệt web lên Mây (Cloud).</p>
+            <ul>
+                <li><strong>Trên máy Windows:</strong> Mở Google Chrome, bấm vào biểu tượng Avatar ở góc trên cùng bên phải. Bấm <strong>"Bật tính năng đồng bộ hóa" (Turn on sync...)</strong> và đăng nhập bằng tài khoản Gmail của bạn.</li>
+                <li><strong>Trên máy Ubuntu:</strong> Sau khi cài Chrome, bạn chỉ cần đăng nhập lại Gmail đó. Mọi thứ sẽ tự động tràn về như cũ!</li>
+            </ul>
+        </div>
+
+        <h2><span>3</span> Cấu hình Proxy và Local Hosts (Dành cho mạng Công ty)</h2>
+        <div class="step">
+            <p>Ở một số công ty, bạn cần cấu hình Proxy để ra Internet và sửa file Hosts để vào các trang Web nội bộ.</p>
+            
+            <p><strong>A. Xử lý Proxy:</strong></p>
+            <ul>
+                <li><strong>Lấy Proxy ở Windows:</strong> Mở Start Menu > gõ <code>Internet Options</code> > tab <strong>Connections</strong> > <strong>LAN settings</strong>. Ghi lại địa chỉ Proxy và Port.</li>
+                <li><strong>Cài Proxy ở Ubuntu:</strong> Vào <strong>Settings</strong> > <strong>Network</strong> > <strong>Network Proxy</strong>. Bấm nút bánh răng, chọn <code>Manual</code> và điền lại đúng thông số Proxy & Port bạn vừa ghi.</li>
+            </ul>
+
+            <p><strong>B. Backup và chuyển file Hosts:</strong></p>
+            <div class="important-note" style="background-color: #f8f9fa; border-left-color: #6c757d;">
+                <strong>Tại sao cần file Hosts?</strong> File Hosts chứa các địa chỉ IP trỏ vào Tên miền nội bộ (Local) chưa được Public ra ngoài. Không có nó, bạn sẽ không thể truy cập các Tool nội bộ của công ty!
+            </div>
+            <ul>
+                <li><strong>Bước 1 (Trên Windows):</strong> Truy cập thư mục <code>C:\Windows\System32\drivers\etc\</code>. Mở file có tên là <code>hosts</code> bằng Notepad, Copy toàn bộ nội dung và lưu lên Google Drive/Zalo truyền file.</li>
+                <li><strong>Bước 2 (Trên Ubuntu):</strong> Mở Terminal (phím tắt <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>T</kbd>) và gõ lệnh sau để mở file hosts:
+                    <br><kbd style="margin: 10px 0; display: inline-block;">sudo nano /etc/hosts</kbd>
+                </li>
+                <li><strong>Bước 3:</strong> Nhập mật khẩu máy tính của bạn. Sau đó Dán (Paste) toàn bộ nội dung đã copy từ Windows vào phía dưới cùng.</li>
+                <li><strong>Bước 4:</strong> Bấm <kbd>Ctrl</kbd> + <kbd>O</kbd> rồi <kbd>Enter</kbd> để Lưu, sau đó bấm <kbd>Ctrl</kbd> + <kbd>X</kbd> để thoát. Hoàn tất!</li>
+            </ul>
+        </div>
+
+        <h2><span>4</span> Cài đặt các Tiện ích "Bắt buộc phải có"</h2>
+        <div class="step">
+            <h3>1. Bộ gõ Tiếng Việt (ibus-bamboo)</h3>
+            <p>Đây là bộ gõ tiếng Việt tốt nhất trên Linux hiện tại, trải nghiệm y hệt Unikey.</p>
+            <ul>
+                <li>Mở Terminal và chạy lần lượt các lệnh sau:</li>
+            </ul>
+            <div style="background: #282c34; color: #abb2bf; padding: 15px; border-radius: 6px; font-family: monospace; margin-bottom: 20px;">
+                sudo add-apt-repository ppa:bamboo-engine/ibus-bamboo<br>
+                sudo apt-get update<br>
+                sudo apt-get install ibus-bamboo<br>
+                ibus restart
+            </div>
+            <ul>
+                <li>Vào <strong>Settings > Region & Language > Input Sources</strong>, thêm tiếng Việt (Vietnamese - Bamboo).</li>
+            </ul>
+
+            <h3>2. Công cụ chụp ảnh màn hình & Ghi chú (Flameshot)</h3>
+            <p>Zalo hay Lightshot trên Windows cho phép bạn chụp màn hình, vẽ mũi tên, ghi chú text ngay lập tức. Trên Ubuntu, <strong>Flameshot</strong> là ông vua của tính năng này.</p>
+            <ul>
+                <li>Cài đặt qua Terminal: <kbd style="margin: 5px 0; display: inline-block;">sudo apt install flameshot</kbd></li>
+                <li><strong>Cài phím tắt <kbd>Print Screen (PrtSc)</kbd> để gọi Flameshot:</strong></li>
+                <li>Vào <strong>Settings > Keyboard > Keyboard Shortcuts > Custom Shortcuts</strong>.</li>
+                <li>Thêm mới: Name là <code>Flameshot</code>, Command là <code>flameshot gui</code>, Shortcut là phím <kbd>PrtSc</kbd>.</li>
+            </ul>
+        </div>
+
+        <h2><span>5</span> Cài đặt Phần mềm Giao tiếp & Văn phòng</h2>
+        <div class="step">
+            <ul>
+                <li><strong>Trình duyệt Google Chrome:</strong> Tải trực tiếp file <code>.deb</code> từ trang chủ Google và nháy đúp để cài đặt.</li>
+                <li><strong>WPS Office:</strong> Thay thế hoàn hảo cho Word, Excel. Tải file <code>.deb</code> từ trang chủ <code>linux.wps.com</code>.</li>
+                <li><strong>Zalo / Telegram / Microsoft Teams:</strong> Với Telegram bạn có thể cài trực tiếp từ Ubuntu Software (App Store của Ubuntu). Với Zalo và Teams, khuyên dùng bản Web (có thể cài thành PWA Web App bằng cách vào Chrome > Dấu 3 chấm > Save and Share > Install page as app).</li>
+            </ul>
+        </div>
+        
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 40px 0 20px;">
+        <p style="text-align: center; color: #888; font-size: 0.9em;">Hướng dẫn được tạo tự động • Chúc bạn có trải nghiệm mượt mà với Ubuntu!</p>
+    </div>
+
+    <!-- Nút Lên Đầu Trang -->
+    <button id="backToTop" class="back-to-top" aria-label="Lên đầu trang">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+        <span>Lên Đầu Trang</span>
+    </button>
+
+    <script src="../../assets/js/guide.js?v=2"></script>
+</body>
+</html>
