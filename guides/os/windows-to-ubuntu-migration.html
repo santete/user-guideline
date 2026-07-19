@@ -103,6 +103,29 @@
                 <li><strong>Zalo / Telegram / Microsoft Teams:</strong> Với Telegram bạn có thể cài trực tiếp từ Ubuntu Software (App Store của Ubuntu). Với Zalo và Teams, khuyên dùng bản Web (có thể cài thành PWA Web App bằng cách vào Chrome > Dấu 3 chấm > Save and Share > Install page as app).</li>
             </ul>
         </div>
+
+        <h2><span>6</span> Làm việc từ xa: OpenVPN và Remote Desktop</h2>
+        <div class="step">
+            <p>Để đảm bảo công việc từ xa (Work From Home) không bị gián đoạn, bạn cần cài đặt 2 công cụ kết nối mạng công ty và điều khiển máy tính từ xa.</p>
+            
+            <h3>1. Cài đặt OpenVPN Client</h3>
+            <p>Ubuntu hỗ trợ OpenVPN cực kỳ tuyệt vời ngay trong phần Cài đặt mạng mặc định (không cần tải thêm App ngoài như Windows).</p>
+            <ul>
+                <li>Mở Terminal và gõ lệnh cài đặt Plugin: <kbd style="margin: 5px 0; display: inline-block;">sudo apt install network-manager-openvpn-gnome</kbd></li>
+                <li>Xin IT file cấu hình VPN của công ty (đuôi <code>.ovpn</code>).</li>
+                <li>Vào <strong>Settings > Network > VPN</strong>, bấm dấu <strong>+</strong>, chọn <strong>Import from file...</strong> và chọn file <code>.ovpn</code> của bạn.</li>
+                <li>Nhập Username và Password rồi bấm Add. Từ giờ, bạn chỉ cần bấm góc trên bên phải màn hình để Bật/Tắt VPN rất tiện lợi!</li>
+            </ul>
+
+            <h3>2. Kết nối Remote Desktop (RDP)</h3>
+            <p>Để điều khiển một máy tính Windows khác từ xa qua giao thức RDP quen thuộc, phần mềm <strong>Remmina</strong> có sẵn trên Ubuntu là lựa chọn hoàn hảo nhất.</p>
+            <ul>
+                <li>Cài đặt qua Terminal: <kbd style="margin: 5px 0; display: inline-block;">sudo apt install remmina</kbd></li>
+                <li>Mở ứng dụng Remmina, chọn giao thức <strong>RDP</strong> ở thanh tìm kiếm phía trên cùng.</li>
+                <li>Nhập địa chỉ IP của máy tính đích (Ví dụ: <code>192.168.1.100</code>) rồi gõ <kbd>Enter</kbd>.</li>
+                <li>Điền Username, Password và (tùy chọn) Domain của công ty là bạn đã Remote Desktop thành công!</li>
+            </ul>
+        </div>
         
         <hr style="border: 0; border-top: 1px solid #eee; margin: 40px 0 20px;">
         <p style="text-align: center; color: #888; font-size: 0.9em;">Hướng dẫn được tạo tự động • Chúc bạn có trải nghiệm mượt mà với Ubuntu!</p>
