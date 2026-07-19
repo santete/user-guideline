@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trung Tâm Hướng Dẫn - User Guidelines Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
+
+    <header class="header">
+        <h1>Trung Tâm Hướng Dẫn</h1>
+        <p>Tìm kiếm nhanh các bài viết hướng dẫn sử dụng công cụ, phần mềm, mẹo vặt hữu ích dành cho bạn.</p>
+        
+        <div class="search-container">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm hướng dẫn (vd: markdown, chrome...)">
+        </div>
+    </header>
+
+    <main class="main-content">
+        <h2 class="section-title">
+            📚 Tất cả hướng dẫn
+        </h2>
+        <div class="guides-grid" id="guidesGrid">
+            <!-- Cards will be populated by JS -->
+        </div>
+    </main>
+
+    <!-- Data and Logic -->
+    <script src="data.js"></script>
+    <script src="assets/js/search.js"></script>
+</body>
+</html>

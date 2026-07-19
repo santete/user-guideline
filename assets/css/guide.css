@@ -1,0 +1,71 @@
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; }
+.container { background-color: #fff; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+h1 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 30px;}
+h2 { color: #2980b9; margin-top: 40px; display: flex; align-items: center; font-size: 1.3em;}
+h2 span { background-color: #3498db; color: white; border-radius: 50%; width: 32px; height: 32px; display: inline-flex; justify-content: center; align-items: center; margin-right: 12px; font-size: 16px; font-weight: bold;}
+.step { margin-bottom: 20px; padding-left: 10px;}
+ul { padding-left: 20px; }
+li { margin-bottom: 10px; }
+.important-note { background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px; }
+.important-note strong { color: #856404; }
+.pro-tip { background-color: #d1ecf1; border-left: 5px solid #17a2b8; padding: 15px; margin: 20px 0; border-radius: 4px; }
+.img-placeholder { width: 100%; height: 250px; background-color: #f1f3f5; border: 2px dashed #ced4da; display: flex; justify-content: center; align-items: center; color: #6c757d; font-style: italic; margin: 20px 0; border-radius: 8px; flex-direction: column; text-align: center; padding: 20px; box-sizing: border-box;}
+.img-placeholder svg { width: 48px; height: 48px; margin-bottom: 10px; opacity: 0.5; color: #adb5bd;}
+kbd { background-color: #eee; border-radius: 3px; border: 1px solid #b4b4b4; box-shadow: 0 1px 1px rgba(0,0,0,.2), 0 2px 0 0 rgba(255,255,255,.7) inset; color: #333; display: inline-block; font-size: .85em; font-weight: 700; line-height: 1; padding: 2px 5px; white-space: nowrap; }
+
+/* Các class Mockup UI */
+.mockup-wrapper { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 12px; padding: 30px; margin: 20px 0; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+.chrome-store { background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; display: flex; align-items: center; gap: 20px; width: 100%; max-width: 500px; border: 1px solid #ddd; }
+.ext-icon-mock { width: 64px; height: 64px; background: #333; color: white; font-size: 32px; font-weight: bold; display: flex; justify-content: center; align-items: center; border-radius: 12px; }
+.ext-details h3 { margin: 0 0 5px 0; font-size: 18px; color: #333; border: none; padding: 0; }
+.ext-details p { margin: 0; font-size: 13px; color: #666; }
+.btn-add-chrome { background: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); animation: pulse-blue 2s infinite; }
+
+.ext-setting { background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 500px; border: 1px solid #ddd; overflow: hidden; }
+.ext-setting-header { background: #f1f3f4; padding: 12px 20px; font-weight: bold; border-bottom: 1px solid #ddd; display: flex; align-items: center; gap: 10px; }
+.ext-setting-body { padding: 0; }
+.setting-row { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; }
+.setting-row.highlight { background: #fff8e1; border: 2px solid #ffc107; position: relative; }
+.setting-row.highlight::after { content: 'BẬT MỤC NÀY'; position: absolute; top: -12px; right: 15px; background: #ffc107; color: #000; font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; }
+.setting-text strong { display: block; color: #202124; font-size: 14px; }
+.setting-text span { font-size: 12px; color: #5f6368; }
+.toggle-switch { width: 36px; height: 20px; background: #1a73e8; border-radius: 10px; position: relative; }
+.toggle-switch::after { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 2px; right: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+.toggle-switch.off { background: #ccc; }
+.toggle-switch.off::after { left: 2px; right: auto; }
+
+/* Markdown Viewer Settings Mockup */
+.md-settings-mockup { width: 100%; max-width: 750px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; border: 1px solid #ddd; font-family: monospace, sans-serif; }
+.md-settings-header { background: #22252a; color: #fff; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-family: monospace; font-size: 16px; }
+.md-settings-nav span { margin-left: 15px; color: #aaa; cursor: pointer; font-size: 14px; }
+.md-settings-nav span.active { color: #fff; border-bottom: 2px solid #fff; padding-bottom: 2px; }
+.md-settings-body { padding: 30px; display: flex; gap: 30px; flex-wrap: wrap; }
+.md-column { flex: 1; min-width: 180px; border-left: 3px solid #6c7d88; padding-left: 15px; }
+.md-column h3 { font-size: 20px; font-weight: normal; margin-top: 0; color: #333; font-family: monospace; }
+.md-box { background: #fafafa; padding: 15px; border-radius: 4px; border: 1px solid #f0f0f0; }
+.md-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 13px; font-family: monospace; }
+.md-row:last-child { margin-bottom: 0; }
+.md-select { background: #e9e9e9; border: 1px solid #ddd; padding: 5px 10px; border-radius: 4px; width: 90px; font-family: monospace; font-size: 11px; font-weight: bold; }
+.md-select.wide { width: 100%; box-sizing: border-box; margin-bottom: 15px; }
+.md-toggle { width: 34px; height: 14px; background: #c5ced5; border-radius: 7px; position: relative; margin-right: 10px; flex-shrink: 0;}
+.md-toggle::after { content: ''; position: absolute; width: 20px; height: 20px; background: #fff; border-radius: 50%; top: -3px; left: -2px; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+.md-toggle.on { background: #6c7d88; }
+.md-toggle.on::after { left: auto; right: -2px; background: #6c7d88; border: 2px solid #fff; }
+.md-toggle-row { display: flex; align-items: center; margin-bottom: 15px; font-size: 14px; font-family: monospace; color: #333; }
+.md-toggle-row:last-child { margin-bottom: 0; }
+.highlight-border { border: 2px dashed #ff5722; position: relative; }
+.highlight-border::before { content: 'CHÚ Ý MỤC NÀY'; position: absolute; top: -12px; right: -5px; background: #ff5722; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-family: sans-serif; font-weight: bold; z-index: 2; }
+
+.drag-mockup { display: flex; align-items: center; gap: 30px; padding: 20px; }
+.desktop-folder { width: 100px; height: 120px; background: white; border: 1px solid #ccc; border-radius: 6px; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.file-md { width: 40px; height: 50px; background: #1a73e8; color: white; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; position: relative; animation: move-file 2.5s infinite; z-index: 10; font-size: 12px; }
+.file-md::after { content: ''; position: absolute; top: 0; right: 0; border-width: 0 12px 12px 0; border-style: solid; border-color: #fff #fff rgba(255,255,255,0.4) rgba(255,255,255,0.4); background: rgba(255,255,255,0.4); display: block; width: 0; height: 0; border-radius: 0 4px 0 0; }
+.browser-window-mock { width: 220px; height: 160px; background: white; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; overflow: hidden; }
+.browser-top { height: 24px; background: #e0e0e0; display: flex; align-items: center; padding: 0 10px; gap: 5px; }
+.browser-dot { width: 10px; height: 10px; border-radius: 50%; background: #ff5f56; }
+.browser-dot:nth-child(2) { background: #ffbd2e; }
+.browser-dot:nth-child(3) { background: #27c93f; }
+.browser-body { flex: 1; background: #f8f9fa; display: flex; align-items: center; justify-content: center; border: 2px dashed #1a73e8; margin: 10px; border-radius: 6px; color: #1a73e8; font-weight: bold; font-size: 14px; text-align: center; padding: 10px; }
+
+@keyframes pulse-blue { 0% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(26, 115, 232, 0); } 100% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0); } }
+@keyframes move-file { 0% { transform: translate(0, 0); } 50% { transform: translate(140px, 0) scale(1.1); } 100% { transform: translate(0, 0); } }
