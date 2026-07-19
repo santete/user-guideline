@@ -45,9 +45,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Authorization': 'Bearer pj_live_89f0039b1111c8e0bfeb07cb87d9da7a' }
             });
             if (response.ok) {
-                const data = await response.json();
-                const stat = data.find(d => d.page_id === pageId);
-                if (stat) {
+                const result = await response.json();
+                if (result.success && result.data && result.data[pageId]) {
+                    const stat = result.data[pageId];
                     localViews = stat.views;
                     localLikes = stat.likes;
                 }

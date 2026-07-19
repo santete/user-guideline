@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const pageId = pathOnly.split('/').pop().replace('.html', '');
             
             // Tìm stat từ API
-            let stat = apiStats.find(s => s.page_id === pageId);
+            let stat = apiStats[pageId];
             
             // Lấy thêm pending queue từ local nếu có để hiển thị chính xác
             let queue = JSON.parse(localStorage.getItem('sync_queue') || '[]');
@@ -71,7 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             if (response.ok) {
-                currentApiStats = await response.json();
+                const result = await response.json();
+                if (result.success && result.data) {
+                    currentApiStats = result.data;
+                }
                 // Re-render với số lượng thật
                 renderGuides(guidesData, currentApiStats);
             }
