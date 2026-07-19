@@ -7,7 +7,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height
 .back-link:hover svg { transform: translateX(-3px); }
 h1 { color: #2c3e50; text-align: center; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 30px;}
 h2 { color: #2980b9; margin-top: 40px; display: flex; align-items: center; font-size: 1.3em;}
-h2 span { background-color: #3498db; color: white; border-radius: 50%; width: 32px; height: 32px; display: inline-flex; justify-content: center; align-items: center; margin-right: 12px; font-size: 16px; font-weight: bold;}
+h2 span { background-color: #3498db; color: white; border-radius: 20px; min-width: 32px; height: 32px; padding: 0 12px; box-sizing: border-box; display: inline-flex; justify-content: center; align-items: center; margin-right: 12px; font-size: 15px; font-weight: bold; white-space: nowrap; }
 .step { margin-bottom: 20px; padding-left: 10px;}
 ul { padding-left: 20px; }
 li { margin-bottom: 10px; }
