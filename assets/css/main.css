@@ -171,9 +171,40 @@ body {
 }
 
 .no-results {
+    grid-column: 1 / -1;
     text-align: center;
     padding: 40px;
     color: var(--text-muted);
-    font-size: 1.1rem;
-    grid-column: 1 / -1;
+    background: white;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+}
+
+.guide-stats {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #f1f5f9;
+    font-size: 0.9rem;
+    color: #94a3b8;
+}
+
+.guide-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.guide-stat-item svg {
+    width: 16px;
+    height: 16px;
+}
+
+.guide-stat-item.liked svg {
+    fill: #ef4444;
+    color: #ef4444;
+}
+.guide-stat-item.liked {
+    color: #ef4444;
 }
