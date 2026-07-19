@@ -13,7 +13,7 @@ const guidesData = [
         category: "Hệ điều hành",
         description: "Bí kíp sinh tồn sang Linux: Đồng bộ Chrome, cấu hình Proxy, copy file Hosts Local, cài đặt bộ gõ ibus-bamboo, chụp màn hình Flameshot và phần mềm văn phòng WPS.",
         url: "guides/os/windows-to-ubuntu-migration.html",
-        tags: ["ubuntu", "windows", "chuyển đổi", "proxy", "hosts", "văn phòng", "it"]
+        tags: ["ubuntu", "windows", "chuyển đổi", "proxy", "hosts", "văn phòng", "it", "remote"]
     },
     {
         id: "vscode-claude-remote",
