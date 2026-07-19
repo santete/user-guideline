@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const pageId = window.location.pathname.split('/').pop().replace('.html', '');
+    const pathOnly = window.location.pathname.split('?')[0];
+    const filename = pathOnly.split('/').pop();
+    // Đọc data.js nếu có (trong index.html không dùng interaction.js nên chắc chắn chạy trong guide page)
+    const guide = (typeof guidesData !== 'undefined') ? guidesData.find(g => g.url.includes(filename)) : null;
+    const pageId = guide ? guide.id : filename.replace('.html', '');
     if (!pageId) return;
 
     // UUID Generator for Device ID

@@ -15,8 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         guidesToRender.forEach(guide => {
             const tagsHtml = guide.tags.map(tag => `<span class="tag">#${tag}</span>`).join('');
             
-            let pathOnly = guide.url.split('?')[0];
-            const pageId = pathOnly.split('/').pop().replace('.html', '');
+            const pageId = guide.id;
             
             // Tìm stat từ API
             let stat = apiStats[pageId];
@@ -64,8 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderGuides(guidesData, currentApiStats);
 
         try {
-            // Lấy ID của tất cả bài viết
-            const allIds = guidesData.map(g => g.url.split('?')[0].split('/').pop().replace('.html', '')).join(',');
+            // Lấy ID của tất cả bài viết từ thuộc tính id
+            const allIds = guidesData.map(g => g.id).join(',');
             const response = await fetch(`https://api.projectnow.app/functions/v1/get-page-stats?page_ids=${allIds}`, {
                 headers: { 'Authorization': `Bearer ${API_KEY}` }
             });
