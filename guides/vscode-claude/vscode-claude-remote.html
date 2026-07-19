@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Hướng Dẫn Dev: Làm Việc Từ Xa Với VS Code & Claude Code</title>
+    <link rel="icon" type="image/png" href="../../assets/images/favicon.png">
+    <link rel="stylesheet" href="../../assets/css/guide.css?v=3">
+</head>
+<body>
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="../../index.html" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Trở về Trang chủ
+            </a>
+        </nav>
+        <h1>Tuyệt Kỹ Cho Dev:<br>Làm Việc Từ Xa Cùng VS Code & Claude Code</h1>
+        <p style="text-align: center; font-size: 1.1em; color: #555;">Bí kíp đưa môi trường làm việc lên điện thoại hoặc bất kỳ trình duyệt nào mà không cần cấu hình VPN, chạy trực tiếp trên máy của bạn.</p>
+
+        <div class="important-note">
+            <strong>💡 TỔNG QUAN:</strong> Tài liệu gồm 2 phần chính:
+            <ul>
+                <li><strong>Phần 1 — VS Code Remote Tunnel:</strong> Mở toàn bộ VS Code của máy Dev trên trình duyệt khác (Full IDE từ xa).</li>
+                <li><strong>Phần 2 — Claude Code Remote Control:</strong> Điều khiển riêng một phiên Claude Code đang chạy, tối ưu cho điện thoại (App Claude) và có Push Notification.</li>
+            </ul>
+            <em>Lưu ý: Cả hai đều giữ code chạy <strong>trên máy của bạn</strong>, không đẩy lên cloud — thiết bị từ xa chỉ đóng vai trò là màn hình điều khiển.</em>
+        </div>
+
+        <h2><span>Phần 1</span> Remote Tunnel trên Visual Studio Code</h2>
+        <div class="step">
+            <p><strong>Mục đích:</strong> Truy cập VS Code và thư mục làm việc của máy Dev từ xa qua trình duyệt tại <code>https://vscode.dev/tunnel/&lt;tên-tunnel&gt;</code>, không cần VPN.</p>
+            <p><strong>Yêu cầu:</strong> Đã cài VS Code; Tài khoản GitHub/Microsoft; Máy Dev đang bật và mở VS Code.</p>
+            
+            <h3>1. Mở menu Account và chọn "Turn on Remote Tunnel Access..."</h3>
+            <ul>
+                <li>Bấm icon <strong>Account</strong> (hình người) ở góc dưới bên trái thanh Activity Bar ➔ Chọn <strong>Turn on Remote Tunnel Access...</strong></li>
+                <li><em>Cách khác:</em> Nhấn <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> ➔ gõ <code>Remote Tunnels: Turn on Remote Tunnel Access</code>.</li>
+            </ul>
+
+            <h3>2. Chọn cách bật</h3>
+            <ul>
+                <li>Hộp thoại hiện ra sẽ có 2 lựa chọn. Khuyên dùng: <strong>Turn on for this session</strong> (Tunnel chỉ chạy khi VS Code còn mở).</li>
+            </ul>
+
+            <h3>3. Đăng nhập tài khoản</h3>
+            <ul>
+                <li>Chọn <strong>Sign in with GitHub</strong> (hoặc Microsoft nếu công ty dùng). Trình duyệt sẽ tự mở để xác thực.</li>
+                <li>Trên trang GitHub, bấm <strong>Continue</strong> để cấp quyền cho Visual Studio Code.</li>
+                <li>Trình duyệt sẽ hỏi có muốn mở lại VS Code không, bấm <strong>Open Visual Studio Code</strong> để quay lại App.</li>
+            </ul>
+
+            <h3>4. Lấy đường link truy cập từ xa</h3>
+            <ul>
+                <li>Quay lại VS Code, mở panel <strong>OUTPUT</strong> và chọn channel <strong>Remote Tunnel Service</strong> ở góc phải.</li>
+                <li>Log sẽ báo tunnel đã chạy kèm tên tunnel. <strong>Copy đường link</strong> (vd: <code>https://vscode.dev/tunnel/w010955143</code>).</li>
+            </ul>
+
+            <h3>5. Truy cập và làm việc từ xa</h3>
+            <ul>
+                <li>Trên máy hoặc trình duyệt khác, mở đường link vừa copy.</li>
+                <li>VS Code Web sẽ hiện ra. Bấm <strong>Open Folder</strong>, nhập đường dẫn thư mục dự án trên máy Dev (vd: <code>C:\Users\&lt;user&gt;\...</code>) rồi bấm OK để bắt đầu làm việc.</li>
+            </ul>
+
+            <div class="important-note" style="background-color: #fff3cd; border-left-color: #ffc107;">
+                <strong>⚠️ Lưu ý bảo mật (Phần 1):</strong>
+                <ul>
+                    <li>Chỉ bật khi cần, tắt khi xong (Account ➔ Turn off Remote Tunnel Access).</li>
+                    <li>Nên dùng tài khoản công ty có bật 2FA.</li>
+                    <li>Không bật trên máy Production hoặc với dữ liệu nhạy cảm chưa được duyệt.</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2><span>Phần 2</span> Remote Control session của Claude Code</h2>
+        <div class="step">
+            <p><strong>Mục đích:</strong> Đang code dở một phiên Claude Code trên máy, bạn có thể cầm điện thoại hoặc mở trình duyệt khác để tiếp tục điều khiển chính phiên đó.</p>
+            <p><strong>Yêu cầu:</strong> Gói Claude Pro/Max/Team/Enterprise; Claude Code CLI v2.1.51+ (kiểm tra bằng <code>claude --version</code>).</p>
+            
+            <h3>1. Kích hoạt tính năng</h3>
+            <ul>
+                <li>Trong ô prompt của Claude Code (ngay trong Terminal của VS Code), gõ lệnh <code>/remote-control</code> (hoặc <code>/rc</code>) rồi nhấn Enter.</li>
+                <li>Một Banner sẽ hiện ra phía trên báo trạng thái kết nối, kèm theo Link phiên (Session link).</li>
+            </ul>
+
+            <h3>2. Mở phiên trên thiết bị khác</h3>
+            <ul>
+                <li>Bấm <strong>Open in browser</strong> trên banner.</li>
+                <li>Hoặc trên điện thoại: Mở app Claude ➔ Tab Code ➔ Chọn phiên. (Gõ <code>/mobile</code> trong Claude Code để hiện QR Code tải App).</li>
+            </ul>
+
+            <h3>3. Điều khiển từ xa & Bật thông báo đẩy</h3>
+            <ul>
+                <li>Bây giờ bạn có thể gửi tin nhắn, duyệt thay đổi code từ điện thoại. Mọi thứ đồng bộ realtime.</li>
+                <li><strong>Để nhận thông báo về điện thoại:</strong> Mở App Claude ➔ Terminal chạy lệnh <code>/config</code> ➔ Bật <strong>Push when Claude decides</strong>.</li>
+                <li>Khi làm xong, bấm icon <strong>Close</strong> trên banner hoặc chạy lại lệnh <code>/remote-control</code> để ngắt kết nối.</li>
+            </ul>
+
+            <div class="important-note" style="background-color: #fff3cd; border-left-color: #ffc107;">
+                <strong>⚠️ Mẹo & Lưu ý (Phần 2):</strong>
+                <ul>
+                    <li><strong>Bảo mật:</strong> Chỉ kết nối ra ngoài bằng HTTPS, không mở cổng (port) vào máy. Tuy nhiên, <strong>ai có link phiên là điều khiển được</strong> ➔ Hãy giữ link cẩn thận như mật khẩu!</li>
+                    <li>Claude vẫn chạy trên máy của bạn. Đóng VS Code/terminal thì phiên cũng sẽ tự kết thúc.</li>
+                    <li>Muốn hiện mã QR nhanh để quét: Chạy lệnh <code>claude remote-control "Tên dự án"</code> trên CLI bên ngoài (không dùng trong VS Code) rồi nhấn dấu cách (Spacebar).</li>
+                </ul>
+            </div>
+        </div>
+        
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 40px 0 20px;">
+        <p style="text-align: center; color: #888; font-size: 0.9em;">Hướng dẫn được tổng hợp và biên soạn dành riêng cho Developer.</p>
+    </div>
+
+    <!-- Nút Lên Đầu Trang -->
+    <button id="backToTop" class="back-to-top" aria-label="Lên đầu trang">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+        <span>Lên Đầu Trang</span>
+    </button>
+
+    <script src="../../assets/js/guide.js?v=2"></script>
+</body>
+</html>

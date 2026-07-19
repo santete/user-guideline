@@ -14,5 +14,13 @@ const guidesData = [
         description: "Bí kíp sinh tồn sang Linux: Đồng bộ Chrome, cấu hình Proxy, copy file Hosts Local, cài đặt bộ gõ ibus-bamboo, chụp màn hình Flameshot và phần mềm văn phòng WPS.",
         url: "guides/os/windows-to-ubuntu-migration.html",
         tags: ["ubuntu", "windows", "chuyển đổi", "proxy", "hosts", "văn phòng", "it"]
+    },
+    {
+        id: "vscode-claude-remote",
+        title: "Tuyệt Kỹ Dev: Remote Từ Xa Với VS Code & Claude Code",
+        category: "Lập trình",
+        description: "Hướng dẫn mở Remote Tunnel trên VS Code và điều khiển phiên Claude Code từ xa qua điện thoại (App Claude) hoặc trình duyệt web cực kỳ tiện lợi.",
+        url: "guides/vscode-claude/vscode-claude-remote.html",
+        tags: ["vscode", "claude", "remote", "tunnel", "dev", "ai"]
     }
 ];
