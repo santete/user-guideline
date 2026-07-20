@@ -1,4 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Tự động dọn dẹp và Migrate dữ liệu LocalStorage cũ (từ tên file HTML sang logical ID)
+    if (!localStorage.getItem('migrated_v2')) {
+        guidesData.forEach(guide => {
+            const oldId = guide.url.split('?')[0].split('/').pop().replace('.html', '');
+            const newId = guide.id;
+            if (oldId !== newId) {
+                ['userLiked_', 'view_', 'likeCount_'].forEach(prefix => {
+                    const oldData = localStorage.getItem(prefix + oldId);
+                    if (oldData !== null) {
+                        localStorage.setItem(prefix + newId, oldData);
+                        localStorage.removeItem(prefix + oldId);
+                    }
+                });
+            }
+        });
+        localStorage.setItem('migrated_v2', 'true');
+        console.log('Migrated old local storage keys to new logical IDs');
+    }
+
     const searchInput = document.getElementById('searchInput');
     const guidesGrid = document.getElementById('guidesGrid');
     const API_KEY = 'pj_live_89f0039b1111c8e0bfeb07cb87d9da7a';
