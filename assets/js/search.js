@@ -21,13 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
             let stat = apiStats[pageId];
             
             // Lấy thêm pending queue từ local nếu có để hiển thị chính xác
-            let queue = JSON.parse(localStorage.getItem('sync_queue') || '[]');
-            let pendingViews = queue.filter(q => q.page_id === pageId && q.event_type === 'VIEW').reduce((sum, q) => sum + q.count, 0);
-            let pendingLikes = queue.filter(q => q.page_id === pageId && q.event_type === 'LIKE').reduce((sum, q) => sum + q.count, 0);
-            let pendingUnlikes = queue.filter(q => q.page_id === pageId && q.event_type === 'UNLIKE').reduce((sum, q) => sum + q.count, 0);
-            
-            let views = (stat ? stat.views : (parseInt(localStorage.getItem(`view_${pageId}`)) || 0)) + pendingViews;
-            let likes = Math.max(0, (stat ? stat.likes : (parseInt(localStorage.getItem(`likeCount_${pageId}`)) || 0)) + pendingLikes - pendingUnlikes);
+            let apiViews = stat ? stat.views : null;
+            let apiLikes = stat ? stat.likes : null;
+            let optStats = window.calculateOptimisticStats(pageId, apiViews, apiLikes);
+            let views = optStats.views;
+            let likes = optStats.likes;
             
             let userLiked = localStorage.getItem(`userLiked_${pageId}`) === 'true';
             let heartClass = userLiked ? 'liked' : '';
