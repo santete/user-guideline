@@ -1,6 +1,6 @@
 // Web Worker for Background Sync (Offline-First)
 const API_KEY = 'pj_live_89f0039b1111c8e0bfeb07cb87d9da7a';
-const API_URL = 'https://projectnow.app/api/functions/sync-offline-events';
+const API_URL = 'https://www.projectnow.app/api/functions/sync-offline-events';
 
 self.addEventListener('message', async (e) => {
     const { type, payload } = e.data;

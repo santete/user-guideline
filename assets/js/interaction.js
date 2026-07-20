@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch initial data from API
     async function fetchStats() {
         try {
-            const response = await fetch(`https://projectnow.app/api/functions/get-page-stats?page_ids=${pageId}`, {
+            const response = await fetch(`https://www.projectnow.app/api/functions/get-page-stats?page_ids=${pageId}`, {
                 headers: { 'Authorization': 'Bearer pj_live_89f0039b1111c8e0bfeb07cb87d9da7a' }
             });
             if (response.ok) {
