@@ -74,4 +74,18 @@ document.addEventListener('DOMContentLoaded', () => {
             updateUI();
         });
     }
+    
+    // Bắt sự kiện khi Background Worker sync thành công để cập nhật lại UI ngay lập tức
+    window.addEventListener('SYNC_UPDATED', (e) => {
+        let syncedPageIds = e.detail.pageIds || [];
+        if (syncedPageIds.includes(pageId)) {
+            // Không truyền apiViews, ép hàm đọc lại từ bộ nhớ đệm Base Cache vừa được Worker cộng dồn
+            let optStats = window.calculateOptimisticStats(pageId, null, null);
+            localViews = optStats.views;
+            localLikes = optStats.likes;
+            updateUI();
+            console.log(`Live Updated UI for ${pageId} after Background Sync`);
+        }
+    });
+
 });
