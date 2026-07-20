@@ -24,11 +24,13 @@ Khi gửi HTTP Request, bạn bắt buộc phải truyền Key vào Header theo 
 
 ## 2. 📡 Endpoints
 
+*(Lưu ý: API đang được định tuyến qua Proxy của máy chủ Vercel để hỗ trợ CORS và Custom Domain)*
+
 ### 2.1. Đẩy Dữ Liệu Lên (POST /sync-offline-events)
 
 Hệ thống của bạn có thể hoạt động offline và gom (batch) các sự kiện lại để gửi một lần nhằm tiết kiệm tài nguyên.
 
-- **URL:** `POST https://api.projectnow.app/functions/v1/sync-offline-events`
+- **URL:** `POST https://projectnow.app/api/functions/sync-offline-events`
 - **Content-Type:** `application/json`
 
 **Cấu trúc Payload (Request Body):**
@@ -46,7 +48,7 @@ Hệ thống của bạn có thể hoạt động offline và gom (batch) các s
 
 Sử dụng khi Web tĩnh của bạn vừa load xong và cần hiển thị tổng lượt View/Like hiện tại cho các bài viết.
 
-- **URL:** `GET https://api.projectnow.app/functions/v1/get-page-stats?page_ids=blog-post-1,intro`
+- **URL:** `GET https://projectnow.app/api/functions/get-page-stats?page_ids=blog-post-1,intro`
 - **Tham số URL:** `page_ids` (Danh sách ID trang, cách nhau bằng dấu phẩy).
 
 **Kết Quả (Response):**

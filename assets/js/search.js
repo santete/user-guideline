@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Lấy ID của tất cả bài viết từ thuộc tính id
             const allIds = guidesData.map(g => g.id).join(',');
-            const response = await fetch(`https://api.projectnow.app/functions/v1/get-page-stats?page_ids=${allIds}`, {
+            const response = await fetch(`https://projectnow.app/api/functions/get-page-stats?page_ids=${allIds}`, {
                 headers: { 'Authorization': `Bearer ${API_KEY}` }
             });
             
