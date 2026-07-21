@@ -16,9 +16,9 @@ C4Context
     System_Ext(api, "ProjectNow API", "Hệ thống Backend (Supabase Edge Functions) lưu trữ số liệu thống kê tập trung.")
     System_Ext(github, "GitHub Pages", "Nền tảng Hosting phục vụ mã nguồn tĩnh (HTML, CSS, JS).")
 
-    Rel(user, web_app, "Đọc tài liệu, tìm kiếm, bấm Like")
-    Rel(web_app, api, "Đồng bộ dữ liệu tương tác ngầm", "HTTPS / JSON")
-    Rel(web_app, github, "Được hosting trên", "HTTPS")
+    Rel(user, web_app, "Đọc tài liệu, tương tác")
+    Rel(web_app, api, "Đồng bộ ngầm", "HTTPS")
+    Rel(web_app, github, "Hosting", "HTTPS")
 ```
 
 ---
@@ -40,12 +40,12 @@ C4Container
 
     System_Ext(api, "ProjectNow API", "REST API (Vercel Proxy / Supabase)")
 
-    Rel(user, spa, "Tương tác (View, Like, Search)")
-    Rel(spa, worker, "Khởi tạo và lắng nghe sự kiện đồng bộ")
-    Rel(spa, local_db, "Lưu sự kiện (Unsync) & đọc Base Cache")
-    Rel(worker, local_db, "Quét và xóa Row sau khi đồng bộ")
-    Rel(spa, api, "GET /get-page-stats", "HTTPS")
-    Rel(worker, api, "POST /sync-offline-events", "HTTPS")
+    Rel(user, spa, "Tương tác UI")
+    Rel(spa, worker, "Quản lý Worker")
+    Rel(spa, local_db, "Đọc/Ghi Outbox")
+    Rel(worker, local_db, "Dọn dẹp Outbox")
+    Rel(spa, api, "GET Stats", "HTTPS")
+    Rel(worker, api, "POST Sync", "HTTPS")
 ```
 
 ---
@@ -72,18 +72,18 @@ C4Component
 
     System_Ext(api, "ProjectNow API", "Backend System")
 
-    Rel(ui_search, data_js, "Đọc danh sách bài")
-    Rel(ui_search, sync_engine, "Gọi tính Optimistic UI")
-    Rel(ui_detail, sync_engine, "Gọi pushToSyncQueue")
+    Rel(ui_search, data_js, "Đọc Metadata")
+    Rel(ui_search, sync_engine, "Tính Optimistic UI")
+    Rel(ui_detail, sync_engine, "Lưu Event")
     
-    Rel(sync_engine, sync_db, "Insert/Delete Row (Outbox)")
-    Rel(sync_engine, base_cache, "Cộng dồn Cache sau Sync")
+    Rel(sync_engine, sync_db, "Thêm/Xóa Row")
+    Rel(sync_engine, base_cache, "Cập nhật Cache")
     
-    BiRel(sync_engine, worker_js, "PostMessage / Nhận Event")
+    BiRel(sync_engine, worker_js, "Giao tiếp Worker")
     
-    Rel(worker_js, api, "POST /sync-offline-events", "JSON")
-    Rel(ui_search, api, "GET /get-page-stats", "JSON")
-    Rel(ui_detail, api, "GET /get-page-stats", "JSON")
+    Rel(worker_js, api, "POST Sync", "JSON")
+    Rel(ui_search, api, "GET Stats", "JSON")
+    Rel(ui_detail, api, "GET Stats", "JSON")
 ```
 
 ---
