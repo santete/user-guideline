@@ -16,9 +16,9 @@ C4Context
     System_Ext(api, "ProjectNow API", "Hệ thống Backend (Supabase Edge Functions) lưu trữ số liệu thống kê tập trung.")
     System_Ext(github, "GitHub Pages", "Nền tảng Hosting phục vụ mã nguồn tĩnh (HTML, CSS, JS).")
 
-    Rel(user, web_app, "Đọc tài liệu, tìm kiếm, bấm Like")
-    Rel(web_app, api, "Đồng bộ dữ liệu tương tác ngầm", "HTTPS / JSON")
-    Rel(web_app, github, "Được hosting trên", "HTTPS")
+    Rel_Down(user, web_app, "Đọc tài liệu, tìm kiếm, bấm Like")
+    Rel_Right(web_app, api, "Đồng bộ dữ liệu tương tác ngầm", "HTTPS / JSON")
+    Rel_Right(web_app, github, "Được hosting trên", "HTTPS")
 ```
 
 ---
@@ -40,12 +40,12 @@ C4Container
 
     System_Ext(api, "ProjectNow API", "REST API (Vercel Proxy / Supabase)")
 
-    Rel(user, spa, "Tương tác (View, Like, Search)")
-    Rel(spa, local_db, "Lưu sự kiện thành từng Row (Unsync) và đọc Base Cache")
-    Rel(spa, worker, "Khởi tạo và lắng nghe sự kiện đồng bộ")
-    Rel(worker, local_db, "Quét các Row Unsync, xóa Row sau khi đồng bộ")
-    Rel(worker, api, "POST /sync-offline-events (Gửi dữ liệu gom nhóm)", "HTTPS")
-    Rel(spa, api, "GET /get-page-stats (Lấy số liệu thực tế khi load trang)", "HTTPS")
+    Rel_Down(user, spa, "Tương tác (View, Like, Search)")
+    Rel_Right(spa, worker, "Khởi tạo và lắng nghe sự kiện đồng bộ")
+    Rel_Down(spa, local_db, "Lưu sự kiện (Unsync) & đọc Base Cache")
+    Rel_Down(worker, local_db, "Quét và xóa Row sau khi đồng bộ")
+    Rel_Right(spa, api, "GET /get-page-stats", "HTTPS")
+    Rel_Right(worker, api, "POST /sync-offline-events", "HTTPS")
 ```
 
 ---
@@ -72,17 +72,18 @@ C4Component
 
     System_Ext(api, "ProjectNow API", "Backend System")
 
-    Rel(ui_search, data_js, "Sử dụng danh sách để render")
-    Rel(ui_search, sync_engine, "Gọi calculateOptimisticStats()")
-    Rel(ui_detail, sync_engine, "Gọi pushToSyncQueue(LIKE/VIEW)")
-    Rel(sync_engine, sync_db, "Insert Row (Unsync)")
-    Rel(sync_engine, worker_js, "PostMessage (Giao việc đồng bộ)")
-    Rel(worker_js, api, "Gửi mảng dữ liệu Batch lên Server", "POST / JSON")
-    Rel(worker_js, sync_engine, "Trả về SYNC_SUCCESS / SYNC_ERROR")
-    Rel(sync_engine, sync_db, "Xóa (Delete) Row đã gửi thành công")
-    Rel(sync_engine, base_cache, "Cộng dồn (Update) Base Cache sau khi Sync")
-    Rel(sync_engine, ui_search, "Bắn sự kiện SYNC_UPDATED để Live Update")
-    Rel(sync_engine, ui_detail, "Bắn sự kiện SYNC_UPDATED để Live Update")
+    Rel_Down(ui_search, data_js, "Đọc danh sách bài")
+    Rel_Right(ui_search, sync_engine, "Gọi tính Optimistic UI")
+    Rel_Right(ui_detail, sync_engine, "Gọi pushToSyncQueue")
+    
+    Rel_Down(sync_engine, sync_db, "Insert/Delete Row (Outbox)")
+    Rel_Down(sync_engine, base_cache, "Cộng dồn Cache sau Sync")
+    
+    BiRel_Right(sync_engine, worker_js, "PostMessage / Nhận Event")
+    
+    Rel_Right(worker_js, api, "POST /sync-offline-events", "JSON")
+    Rel_Right(ui_search, api, "GET /get-page-stats", "JSON")
+    Rel_Right(ui_detail, api, "GET /get-page-stats", "JSON")
 ```
 
 ---
