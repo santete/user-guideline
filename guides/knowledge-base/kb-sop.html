@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Quy Chuẩn Vận Hành Knowledge Base (SOP)</title>
+    <link rel="icon" type="image/png" href="../../assets/images/favicon.png">
+    <link rel="stylesheet" href="../../assets/css/guide.css?v=4">
+    <style>
+        .role-human { color: #d97706; font-weight: bold; }
+        .role-machine { color: #059669; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="breadcrumb">
+            <a href="../../index.html" class="back-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Trở về Trang chủ
+            </a>
+        </nav>
+        
+        <h1>Quy Chuẩn Vận Hành Knowledge Base<br>Dành Cho Developer</h1>
+        <p style="text-align: center; font-size: 1.1em; color: #555;">Hướng dẫn tiêu chuẩn (SOP) để kỹ sư phối hợp cùng AI trong chu trình Build - Use - Update hệ thống tài liệu từ Legacy Code.</p>
+        
+        <div class="important-note" style="background-color: #f0fdf4; border-left-color: #22c55e;">
+            <strong>🔗 Sơ Đồ Quy Trình Tương Tác:</strong> Để nắm rõ bức tranh tổng thể, vui lòng tham khảo sơ đồ Pipeline (Node <span class="role-machine">Xanh = Máy</span>, Node <span class="role-human">Cam = Người</span>) tại đây:<br>
+            <a href="https://claude.ai/code/artifact/89d0e362-c091-464b-8df4-fce9ea449406" target="_blank" style="display: inline-block; margin-top: 10px; font-weight: bold; color: #0066cc;">👉 Xem Sơ Đồ Claude Code Pipeline</a>
+        </div>
+
+        <h2><span>Giai đoạn 1</span> BUILD: Xây Dựng & Khởi Tạo KB</h2>
+        <div class="step">
+            <p>Trong giai đoạn này, AI làm công việc quét code nặng nhọc. <strong>Trách nhiệm của con người là làm "Người gác cổng" (Gatekeeper)</strong> kiểm duyệt chất lượng tài liệu.</p>
+            
+            <h3>1. Cung cấp Input đầu vào (Bước 0)</h3>
+            <ul>
+                <li><span class="role-human">Dev phải làm:</span> Khai báo đúng đường dẫn Source Code cũ (Entry point) và thông tin Project Owner để AI có căn cứ quét hệ thống.</li>
+            </ul>
+
+            <h3>2. Review Cấu Trúc Nháp (Bước 3)</h3>
+            <ul>
+                <li><span class="role-machine">Máy làm:</span> Sinh ra cấu trúc phân bổ <code>Service → Feature</code>.</li>
+                <li><span class="role-human">Dev phải làm:</span> Đọc kỹ danh sách Feature. Nếu AI hiểu sai Logic, phải Reject và tự điều chỉnh lại ranh giới các Feature. <strong>Tuyệt đối không nhắm mắt Approve</strong> nếu cấu trúc chia sai.</li>
+            </ul>
+
+            <h3>3. Chốt Hạ Báo Cáo Audit (Bước 7)</h3>
+            <ul>
+                <li><span class="role-machine">Máy làm:</span> Chấm điểm 13 hạng mục tài liệu, đưa ra danh sách lỗi (NOT READY).</li>
+                <li><span class="role-human">Dev phải làm:</span> Đọc báo cáo Audit. Nếu AI báo thiếu sót, Dev phải kích hoạt quét lại hoặc chủ động bổ sung thông tin vào vùng <em>Human-authored</em> (vùng con người viết). Cuối cùng, Dev là người bấm Commit để lưu KB.</li>
+            </ul>
+        </div>
+
+        <h2><span>Giai đoạn 2 & 3</span> USE: Phát Triển Tính Năng (Req ⇄ Implement)</h2>
+        <div class="step">
+            <p>KB giờ đây là "Single Source of Truth". Sự thay đổi phải đi từ Yêu Cầu ➔ Code ➔ KB.</p>
+            
+            <h3>1. Chốt Yêu Cầu Nghiệp Vụ (Bước R2)</h3>
+            <ul>
+                <li><span class="role-human">PM/Dev phải làm:</span> Review tài liệu PRD/BRD mà AI vừa kéo từ Drive về. Đảm bảo nghiệp vụ không xung đột với Kiến trúc cũ đã ghi trong KB.</li>
+            </ul>
+
+            <h3>2. Review Code & Cảnh Báo (Bước 9)</h3>
+            <ul>
+                <li><span class="role-machine">Máy làm:</span> Chặn các lỗi cơ bản (lộ API key, thiếu Test, mất Anchor).</li>
+                <li><span class="role-human">Dev phải làm:</span> Đọc kỹ các Cảnh báo (⚠ Warnings). Máy không thể tự fix các lỗi sai logic nghiệp vụ hoặc sai khác giữa Code và KB. Người review (Tech Lead) phải bắt Dev sửa lại code hoặc cập nhật vùng <em>Human-authored</em> trong KB trước khi bấm Merge.</li>
+            </ul>
+        </div>
+
+        <h2><span>Giai đoạn 4</span> UPDATE: Bảo Trì Tránh Thiu Thối (Doc Rot)</h2>
+        <div class="step">
+            <p>Trách nhiệm cập nhật để KB luôn "sống" và khớp với Codebase.</p>
+            
+            <h3>1. Chủ động Re-Sync sau khi Merge (Bước 10)</h3>
+            <ul>
+                <li><span class="role-human">Dev phải làm:</span> Bắt buộc! Ngay sau khi Merge code tính năng mới, Dev phải gõ lệnh <code>/kb-generate (MODE SYNC)</code> để AI quét lại Source Code và ghi đè cập nhật vào vùng <em>AI auto-updated</em> trong KB.</li>
+            </ul>
+
+            <h3>2. Phản hồi "Bác sĩ" KB-Doctor (Bước 11)</h3>
+            <ul>
+                <li><span class="role-machine">Máy làm:</span> Quét định kỳ phát hiện tài liệu chết, link hỏng, đưa ra cảnh báo P1-P3.</li>
+                <li><span class="role-human">Dev phải làm:</span> Máy <strong>KHÔNG</strong> tự uống thuốc (auto-fix). Dev nhận được report từ kb-doctor phải sắp xếp task để fix các lỗi P1, P2 trong Sprint hiện tại (chạy re-sync hoặc vào tự sửa tay phần Human-authored).</li>
+            </ul>
+        </div>
+
+        <div class="important-note" style="background-color: #fff3cd; border-left-color: #ffc107;">
+            <strong>⚠️ NGUYÊN TẮC BẤT DI BẤT DỊCH TỔNG KẾT:</strong>
+            <ul>
+                <li><strong>Máy làm cu ly:</strong> Mọi thao tác tốn sức (quét file, viết nháp, chấm điểm, kiểm tra chính tả) nhường hết cho AI (🟢 <span class="role-machine">Xanh</span>).</li>
+                <li><strong>Người làm Gác Cổng (Gatekeeper):</strong> Con người (🟠 <span class="role-human">Cam</span>) chịu trách nhiệm phê duyệt, quyết định luồng đi, và viết các Logic nghiệp vụ đặc thù mà Máy không thể tự đọc ra từ Code. <strong>Tuyệt đối không Auto-Approve.</strong></li>
+            </ul>
+        </div>
+
+        <!-- Thanh tương tác -->
+        <div class="interaction-bar">
+            <div class="interaction-item" title="Lượt xem">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <span id="viewCount">...</span>
+            </div>
+            <button id="likeBtn" class="interaction-btn" title="Thích bài viết">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                <span id="likeCount">...</span> Thích
+            </button>
+        </div>
+        
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 40px 0 20px;">
+        <p style="text-align: center; color: #888; font-size: 0.9em;">Hướng dẫn được tổng hợp và biên soạn dành riêng cho Developer.</p>
+    </div>
+
+    <!-- Nút Lên Đầu Trang -->
+    <button id="backToTop" class="back-to-top" aria-label="Lên đầu trang">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+        <span>Lên Đầu Trang</span>
+    </button>
+
+    <script src="../../data.js"></script>
+    <script src="../../assets/js/guide.js?v=2"></script>
+    <script src="../../assets/js/sync-engine.js"></script>
+    <script src="../../assets/js/interaction.js"></script>
+</body>
+</html>
