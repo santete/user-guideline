@@ -49,8 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
             let userLiked = localStorage.getItem(`userLiked_${pageId}`) === 'true';
             let heartClass = userLiked ? 'liked' : '';
             
+            // Xử lý mở tab mới cho link ngoài (External URL)
+            let targetAttr = guide.url.startsWith('http') ? 'target="_blank"' : '';
+            
             const cardHtml = `
-                <a href="${guide.url}" class="guide-card">
+                <a href="${guide.url}" class="guide-card" ${targetAttr}>
                     <div class="guide-category">${guide.category}</div>
                     <h3 class="guide-title">${guide.title}</h3>
                     <p class="guide-desc">${guide.description}</p>

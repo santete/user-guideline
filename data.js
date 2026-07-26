@@ -30,5 +30,13 @@ const guidesData = [
         description: "Quy chuẩn tiêu chuẩn (SOP) cho Developer trong việc phối hợp với AI xây dựng và duy trì Knowledge Base qua 3 giai đoạn: Build - Use - Update.",
         url: "guides/knowledge-base/kb-sop.html?v=1",
         tags: ["knowledge base", "sop", "ai", "claude", "quy trình"]
+    },
+    {
+        id: "observability-standard",
+        title: "Tiêu Chuẩn Giám Sát Hệ Thống (Observability)",
+        category: "Quy trình",
+        description: "Tài liệu tiêu chuẩn về Logging, Metrics & Tracing giúp thiết lập hệ thống cảnh báo và gỡ lỗi nhanh chóng cho Microservices.",
+        url: "https://santete.github.io/observability-standard/",
+        tags: ["observability", "monitoring", "logging", "metrics"]
     }
 ];
