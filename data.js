@@ -25,7 +25,7 @@ const guidesData = [
     },
     {
         id: "kb-sop",
-        title: "Quy Chuẩn Vận Hành Knowledge Base (SOP)",
+        title: "Quy Chuẩn Xây Dựng & Vận Hành Knowledge Base (SOP)",
         category: "Quy trình",
         description: "Quy chuẩn tiêu chuẩn (SOP) cho Developer trong việc phối hợp với AI xây dựng và duy trì Knowledge Base qua 3 giai đoạn: Build - Use - Update.",
         url: "guides/knowledge-base/kb-sop.html?v=1",
