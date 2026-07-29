@@ -426,51 +426,84 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnSubmitPath?.addEventListener('click', async () => {
         const name = document.getElementById('bundlePathName').value.trim();
+        const localPath = document.getElementById('bundleLocalPath')?.value.trim();
         const folderInput = document.getElementById('bundleFolderInput');
         
-        if (!name || !folderInput || !folderInput.files || folderInput.files.length === 0) {
-            showImportStatus('Vui lòng nhập tên bundle và chọn thư mục local.', 'rose');
+        if (!name) {
+            showImportStatus('Vui lòng nhập tên gói tri thức OKF.', 'rose');
             return;
         }
 
-        showImportStatus('<i class="fa-solid fa-circle-notch fa-spin"></i> Đang quét và chỉ mục thư mục local...', 'blue');
+        // Mode A: Direct Local Path String Registration (Node / FastAPI Backend Mode - Zero Upload)
+        if (localPath) {
+            showImportStatus('<i class="fa-solid fa-circle-notch fa-spin"></i> Đang kết nối đường dẫn ổ cứng...', 'blue');
+            try {
+                const res = await fetch('/api/bundles/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, path: localPath })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || data.error || 'Không thể mở thư mục local');
 
-        try {
-            const bundleId = 'bundle_' + Date.now();
-            const extractedFiles = {};
-
-            const fileArray = Array.from(folderInput.files);
-            const readPromises = fileArray.map(file => {
-                const relPath = file.webkitRelativePath || file.name;
-                if (relPath.endsWith('.md') || relPath.endsWith('.json') || relPath.endsWith('.txt')) {
-                    return file.text().then(text => {
-                        const cleanPath = relPath.includes('/') ? relPath.substring(relPath.indexOf('/') + 1) : relPath;
-                        extractedFiles[cleanPath] = text;
-                    });
+                showImportStatus(data.message || 'Đã mở trực tiếp thư mục local thành công!', 'emerald');
+                setTimeout(() => {
+                    importBundleModalEl.classList.add('hidden');
+                    importStatusEl.classList.add('hidden');
+                    loadBundlesList();
+                }, 1200);
+                return;
+            } catch (err) {
+                console.warn('Direct path registration fallback to client picker...', err);
+                if (!folderInput || !folderInput.files || folderInput.files.length === 0) {
+                    showImportStatus(`Không thể mở đường dẫn '${localPath}'. Nếu chạy trang web tĩnh, vui lòng chọn thư mục qua ô phía dưới.`, 'rose');
+                    return;
                 }
-                return Promise.resolve();
-            });
+            }
+        }
 
-            await Promise.all(readPromises);
+        // Mode B: Client Browser Directory Picker
+        if (folderInput && folderInput.files && folderInput.files.length > 0) {
+            showImportStatus('<i class="fa-solid fa-circle-notch fa-spin"></i> Đang chỉ mục thư mục local...', 'blue');
+            try {
+                const bundleId = 'bundle_' + Date.now();
+                const extractedFiles = {};
 
-            localBundles[bundleId] = {
-                id: bundleId,
-                name: name,
-                files: extractedFiles
-            };
+                const fileArray = Array.from(folderInput.files);
+                const readPromises = fileArray.map(file => {
+                    const relPath = file.webkitRelativePath || file.name;
+                    if (relPath.endsWith('.md') || relPath.endsWith('.json') || relPath.endsWith('.txt')) {
+                        return file.text().then(text => {
+                            const cleanPath = relPath.includes('/') ? relPath.substring(relPath.indexOf('/') + 1) : relPath;
+                            extractedFiles[cleanPath] = text;
+                        });
+                    }
+                    return Promise.resolve();
+                });
 
-            localStorage.setItem('okf_custom_bundles', JSON.stringify(localBundles));
-            currentBundleId = bundleId;
+                await Promise.all(readPromises);
 
-            showImportStatus(`Đã nạp thành công thư mục local với ${Object.keys(extractedFiles).length} tài liệu OKF!`, 'emerald');
-            setTimeout(() => {
-                importBundleModalEl.classList.add('hidden');
-                importStatusEl.classList.add('hidden');
-                loadBundlesList();
-            }, 1200);
+                localBundles[bundleId] = {
+                    id: bundleId,
+                    name: name,
+                    files: extractedFiles
+                };
 
-        } catch (err) {
-            showImportStatus(`Lỗi đọc thư mục: ${err.message}`, 'rose');
+                localStorage.setItem('okf_custom_bundles', JSON.stringify(localBundles));
+                currentBundleId = bundleId;
+
+                showImportStatus(`Đã nạp thành công thư mục local với ${Object.keys(extractedFiles).length} tài liệu OKF!`, 'emerald');
+                setTimeout(() => {
+                    importBundleModalEl.classList.add('hidden');
+                    importStatusEl.classList.add('hidden');
+                    loadBundlesList();
+                }, 1200);
+
+            } catch (err) {
+                showImportStatus(`Lỗi đọc thư mục: ${err.message}`, 'rose');
+            }
+        } else if (!localPath) {
+            showImportStatus('Vui lòng nhập đường dẫn thư mục hoặc chọn thư mục từ máy.', 'rose');
         }
     });
 
