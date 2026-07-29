@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Custom In-Memory & LocalStorage Bundles Store
     let localBundles = JSON.parse(localStorage.getItem('okf_custom_bundles') || '{}');
+    let backendBundles = {}; // For Local Server Mode
+    let isLocalMode = false;
 
     // DOM Elements
     const apiKeyStatusEl = document.getElementById('apiKeyStatus');
@@ -31,6 +33,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabPathContent = document.getElementById('tabPathContent');
     const btnSubmitZip = document.getElementById('btnSubmitZip');
     const btnSubmitPath = document.getElementById('btnSubmitPath');
+    const btnSubmitLocalPath = document.getElementById('btnSubmitLocalPath');
+    const localModeUIEl = document.getElementById('localModeUI');
     const importStatusEl = document.getElementById('importStatus');
 
     const treeContainerEl = document.getElementById('treeContainer');
@@ -88,27 +92,72 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 2. LOAD BUNDLES LIST
+    // 1.5. INITIALIZE MODE (DUAL-MODE DETECTION)
+    async function initializeMode() {
+        checkHealth();
+        try {
+            const res = await fetch('/api/bundles');
+            if (res.ok) {
+                const data = await res.json();
+                isLocalMode = true;
+                if (localModeUIEl) localModeUIEl.classList.remove('hidden');
+                
+                backendBundles = {};
+                data.bundles.forEach(b => {
+                    backendBundles[b.bundle_id] = b;
+                });
+            }
+        } catch (e) {
+            isLocalMode = false;
+        }
+        loadBundlesList();
+    }
+
+    // 2. LOAD BUNDLES LIST (MERGE RAM & BACKEND)
     function loadBundlesList() {
         bundleSelectEl.innerHTML = '';
         
-        const customIds = Object.keys(localBundles);
-        if (customIds.length === 0) {
+        const localIds = Object.keys(localBundles);
+        const backendIds = Object.keys(backendBundles);
+        
+        if (localIds.length === 0 && backendIds.length === 0) {
             const emptyOpt = document.createElement('option');
             emptyOpt.value = '';
             emptyOpt.textContent = '-- Chưa có Gói Tri Thức (Hãy Import) --';
             bundleSelectEl.appendChild(emptyOpt);
             currentBundleId = '';
         } else {
-            customIds.forEach(bId => {
-                const opt = document.createElement('option');
-                opt.value = bId;
-                opt.textContent = `${localBundles[bId].name} (${Object.keys(localBundles[bId].files).length} docs)`;
-                if (bId === currentBundleId) opt.selected = true;
-                bundleSelectEl.appendChild(opt);
-            });
-            if (!currentBundleId || !localBundles[currentBundleId]) {
-                currentBundleId = customIds[0];
+            // Render Backend Bundles
+            if (backendIds.length > 0) {
+                const optGroup = document.createElement('optgroup');
+                optGroup.label = '⚡ Ổ Cứng Local (Siêu Tốc)';
+                backendIds.forEach(bId => {
+                    const opt = document.createElement('option');
+                    opt.value = bId;
+                    opt.textContent = `${backendBundles[bId].name}`;
+                    if (bId === currentBundleId) opt.selected = true;
+                    optGroup.appendChild(opt);
+                });
+                bundleSelectEl.appendChild(optGroup);
+            }
+
+            // Render RAM Bundles
+            if (localIds.length > 0) {
+                const optGroup = document.createElement('optgroup');
+                optGroup.label = '🧠 Bộ Nhớ RAM (Browser SPA)';
+                localIds.forEach(bId => {
+                    const opt = document.createElement('option');
+                    opt.value = bId;
+                    opt.textContent = `${localBundles[bId].name} (${Object.keys(localBundles[bId].files).length} docs)`;
+                    if (bId === currentBundleId) opt.selected = true;
+                    optGroup.appendChild(opt);
+                });
+                bundleSelectEl.appendChild(optGroup);
+            }
+
+            if (!currentBundleId || (!localBundles[currentBundleId] && !backendBundles[currentBundleId])) {
+                currentBundleId = backendIds.length > 0 ? backendIds[0] : localIds[0];
+                bundleSelectEl.value = currentBundleId;
             }
         }
 
@@ -120,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const bId = bundleId || bundleSelectEl.value || currentBundleId;
         currentBundleId = bId;
 
-        if (!bId || !localBundles[bId]) {
+        if (!bId || (!localBundles[bId] && !backendBundles[bId])) {
             okfBundleNameEl.textContent = 'Chưa chọn Bundle';
             docCountTextEl.textContent = '0 tài liệu OKF';
             treeContainerEl.innerHTML = `
@@ -134,49 +183,96 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const bundle = localBundles[bId];
-        okfBundleNameEl.textContent = bundle.name;
-        const fileKeys = Object.keys(bundle.files);
-        docCountTextEl.textContent = `${fileKeys.length} tài liệu OKF`;
-
         const container = document.createElement('div');
         container.className = 'tree-nodes-list';
-
-        fileKeys.forEach(fPath => {
-            const itemEl = document.createElement('div');
-            itemEl.className = 'tree-item';
-            itemEl.innerHTML = `<i class="fa-solid fa-file-lines"></i><span>${fPath}</span>`;
-            itemEl.addEventListener('click', () => {
-                openFileModalContent(fPath, bundle.files[fPath]);
-            });
-            container.appendChild(itemEl);
-        });
-
         treeContainerEl.innerHTML = '';
-        treeContainerEl.appendChild(container);
+
+        if (backendBundles[bId]) {
+            // BACKEND MODE TREE
+            okfBundleNameEl.textContent = backendBundles[bId].name;
+            try {
+                const res = await fetch(`/api/okf/tree?bundle_id=${bId}`);
+                const data = await res.json();
+                
+                let docCount = 0;
+                function renderTree(items, parentEl) {
+                    items.forEach(item => {
+                        const el = document.createElement('div');
+                        el.className = 'tree-item';
+                        if (item.is_dir) {
+                            el.classList.add('folder');
+                            el.innerHTML = `<i class="fa-solid fa-folder"></i><span>${item.name}</span>`;
+                            const childrenContainer = document.createElement('div');
+                            childrenContainer.className = 'tree-children hidden';
+                            renderTree(item.children || [], childrenContainer);
+                            
+                            el.addEventListener('click', (e) => {
+                                if (e.target !== el && e.target.parentElement !== el) return;
+                                const isHidden = childrenContainer.classList.contains('hidden');
+                                childrenContainer.classList.toggle('hidden');
+                                el.querySelector('i').className = isHidden ? 'fa-solid fa-folder-open' : 'fa-solid fa-folder';
+                            });
+                            parentEl.appendChild(el);
+                            parentEl.appendChild(childrenContainer);
+                        } else {
+                            if (item.extension === '.md' || item.extension === '.json') docCount++;
+                            el.innerHTML = `<i class="fa-solid fa-file-lines"></i><span>${item.name}</span>`;
+                            el.addEventListener('click', () => {
+                                openFileModalBackend(bId, item.rel_path, item.name);
+                            });
+                            parentEl.appendChild(el);
+                        }
+                    });
+                }
+                
+                renderTree(data.tree, container);
+                docCountTextEl.textContent = `${docCount} tài liệu OKF`;
+                treeContainerEl.appendChild(container);
+            } catch (err) {
+                treeContainerEl.innerHTML = `<div class="loading-state" style="color: var(--accent-rose);">Lỗi tải cây thư mục từ Server: ${err.message}</div>`;
+            }
+        } else {
+            // RAM MODE TREE
+            const bundle = localBundles[bId];
+            okfBundleNameEl.textContent = bundle.name;
+            const fileKeys = Object.keys(bundle.files);
+            docCountTextEl.textContent = `${fileKeys.length} tài liệu OKF`;
+
+            fileKeys.forEach(fPath => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'tree-item';
+                itemEl.innerHTML = `<i class="fa-solid fa-file-lines"></i><span>${fPath}</span>`;
+                itemEl.addEventListener('click', () => {
+                    openFileModalContent(fPath, bundle.files[fPath]);
+                });
+                container.appendChild(itemEl);
+            });
+            treeContainerEl.appendChild(container);
+        }
     }
 
     // 4. OPEN FILE MODALS & PREVIEWS
-    async function openFileModalStatic(filePath, fileName) {
-        modalFileNameEl.textContent = fileName;
+    async function openFileModalBackend(bundleId, relPath, fileName) {
+        modalFileNameEl.textContent = fileName || relPath;
         modalFileContentEl.innerHTML = `
             <div class="loading-state">
                 <i class="fa-solid fa-circle-notch fa-spin"></i>
-                <span>Đang đọc tài liệu: ${fileName}...</span>
+                <span>Đang tải nội dung từ Local Server...</span>
             </div>`;
 
-        if (btnOpenNewTabEl) btnOpenNewTabEl.href = filePath;
+        if (btnOpenNewTabEl) btnOpenNewTabEl.href = `/api/okf/raw?bundle_id=${bundleId}&path=${encodeURIComponent(relPath)}`;
         fileModalEl.classList.remove('hidden');
         isRawMode = false;
         if (btnToggleRawEl) btnToggleRawEl.innerHTML = '<i class="fa-solid fa-code"></i> Raw Code';
 
         try {
-            const res = await fetch(filePath);
+            const res = await fetch(`/api/okf/file?bundle_id=${bundleId}&path=${encodeURIComponent(relPath)}`);
             if (!res.ok) throw new Error('Không thể tải file');
-            currentRawContent = await res.text();
+            const data = await res.json();
+            currentRawContent = data.content;
             renderModalBody();
         } catch (err) {
-            modalFileContentEl.innerHTML = `<div style="color: var(--accent-rose);">Lỗi đọc file: ${err.message}</div>`;
+            modalFileContentEl.innerHTML = `<div style="color: var(--accent-rose);">Lỗi đọc file từ Server: ${err.message}</div>`;
         }
     }
 
@@ -304,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const assistantMsgEl = appendMessage('assistant', '');
         const bubbleEl = assistantMsgEl.querySelector('.msg-bubble');
-        bubbleEl.innerHTML = '<span class="typing-cursor"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang truy vấn dữ liệu OKF & gửi AI Gateway...</span>';
+        bubbleEl.innerHTML = '<span class="typing-cursor"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang truy vấn dữ liệu OKF...</span>';
 
         isStreaming = true;
         btnSendEl.disabled = true;
@@ -316,14 +412,43 @@ document.addEventListener('DOMContentLoaded', () => {
         const gatewayUrl = localStorage.getItem('projectnow_gateway_url') || DEFAULT_GATEWAY_URL;
         const selectedModel = modelSelectEl.value;
 
-        // Build OKF Context from active bundle in browser memory
-        const activeBundle = localBundles[currentBundleId];
-        const okfContext = buildOKFContextFromMemory(activeBundle, query);
-        const bundleName = activeBundle ? activeBundle.name : 'Chưa chọn Bundle';
+        // DUAL-MODE CONTEXT ROUTING
+        let okfContext = '';
+        let bundleName = 'Chưa chọn Bundle';
+
+        if (backendBundles[currentBundleId]) {
+            // MODE A: LOCAL BACKEND (RAG Top 6 Docs Search)
+            bundleName = backendBundles[currentBundleId].name;
+            try {
+                const searchRes = await fetch('/api/okf/search_context', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query, bundle_id: currentBundleId, max_docs: 6 })
+                });
+                if (searchRes.ok) {
+                    const searchData = await searchRes.json();
+                    okfContext = searchData.context;
+                } else {
+                    throw new Error("Lỗi gọi Local RAG Engine");
+                }
+            } catch (err) {
+                console.error("Local RAG Search failed:", err);
+                okfContext = "Lỗi khi tìm kiếm dữ liệu trên Local Server.";
+            }
+        } else {
+            // MODE B: SERVERLESS SPA (RAM 300KB Dump)
+            const activeBundle = localBundles[currentBundleId];
+            if (activeBundle) {
+                bundleName = activeBundle.name;
+                okfContext = buildOKFContextFromMemory(activeBundle, query);
+            }
+        }
+
+        bubbleEl.innerHTML = '<span class="typing-cursor"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang phân tích và tạo câu trả lời qua AI Gateway...</span>';
 
         const systemPrompt = `Bạn là trợ lý AI chuyên gia phân tích và giải đáp dữ liệu dựa trên Giao thức Tri thức OKF (Open Knowledge Format) của Google.
 
-DƯỚI ĐÂY LÀ NỘI DUNG TÀI LIỆU CỦA GÓI TRI THỨC OKF ĐANG ACTIVE ("${bundleName}") ĐƯỢC NẠP TRỰC TIẾP TỪ BỘ NHỚ:
+DƯỚI ĐÂY LÀ NỘI DUNG TÀI LIỆU CỦA GÓI TRI THỨC OKF ĐANG ACTIVE ("${bundleName}") ĐƯỢC CHẮT LỌC VÀ CUNG CẤP:
 
 ==================== NỘI DUNG GÓI TRI THỨC OKF BẮT ĐẦU ====================
 ${okfContext}
@@ -497,7 +622,36 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
             showImportStatus(`Lỗi giải nén ZIP: ${err.message}`, 'rose');
         }
     });
+    btnSubmitLocalPath?.addEventListener('click', async () => {
+        const name = document.getElementById('bundlePathName').value.trim();
+        const localPath = document.getElementById('bundleLocalPath')?.value.trim();
+        
+        if (!name || !localPath) {
+            showImportStatus('Vui lòng nhập tên bundle và đường dẫn ổ cứng (Local Path).', 'rose');
+            return;
+        }
 
+        showImportStatus('<i class="fa-solid fa-circle-notch fa-spin"></i> Đang đăng ký thư mục local với máy chủ...', 'blue');
+        try {
+            const res = await fetch('/api/bundles/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, path: localPath })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || data.error || 'Không thể mở thư mục local');
+
+            showImportStatus(data.message || 'Đã đăng ký trực tiếp thư mục local thành công!', 'emerald');
+            setTimeout(() => {
+                importBundleModalEl.classList.add('hidden');
+                importStatusEl.classList.add('hidden');
+                // Refresh backend bundles
+                initializeMode(); 
+            }, 1200);
+        } catch (err) {
+            showImportStatus(`Lỗi đăng ký Local Path: ${err.message}`, 'rose');
+        }
+    });
     btnSubmitPath?.addEventListener('click', async () => {
         const name = document.getElementById('bundlePathName').value.trim();
         const folderInput = document.getElementById('bundleFolderInput');
@@ -629,6 +783,5 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
     });
 
     // Startup Initializations
-    checkHealth();
-    loadBundlesList();
+    initializeMode();
 });

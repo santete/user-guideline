@@ -217,10 +217,29 @@
                         <label for="bundlePathName">Tên Gói Tri Thức (Bundle Name):</label>
                         <input type="text" id="bundlePathName" placeholder="Ví dụ: Core Banking OKF Bundle">
                     </div>
+
+                    <!-- LOCAL MODE UI (Bị Ẩn Ở Môi Trường GitHub Pages) -->
+                    <div id="localModeUI" class="hidden" style="margin-top: 15px; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(30, 41, 59, 0.5);">
+                        <div style="color: var(--accent-emerald); font-weight: bold; margin-bottom: 10px; font-size: 13px;">
+                            <i class="fa-solid fa-server"></i> Local Server Detected
+                        </div>
+                        <label for="bundleLocalPath">Đường Dẫn Ổ Cứng Máy Tính (Local Path):</label>
+                        <input type="text" id="bundleLocalPath" placeholder="C:\Users\nangh\Documents\ga-okf">
+                        <small class="help-text">Nhập đường dẫn tuyệt đối tới thư mục OKF. Server Node.js sẽ trực tiếp truy xuất ổ cứng cực nhanh!</small>
+                        <button class="btn btn-secondary margin-top full-width" id="btnSubmitLocalPath">
+                            <i class="fa-solid fa-bolt"></i> Nạp Đường Dẫn Qua Local Server
+                        </button>
+                    </div>
+                    
+                    <div class="divider" style="margin: 20px 0; border-top: 1px solid var(--border-color); position: relative; text-align: center;">
+                        <span style="background: var(--bg-card); padding: 0 10px; position: relative; top: -10px; font-size: 12px; color: var(--text-secondary);">HOẶC</span>
+                    </div>
+
+                    <!-- BROWSER MODE UI (Dành cho GitHub Pages hoặc fallback) -->
                     <div class="form-group margin-top">
-                        <label for="bundleFolderInput">Chọn Thư Mục OKF (Giải pháp Serverless SPA):</label>
+                        <label for="bundleFolderInput">Chọn Thư Mục OKF (Nạp Vào RAM Trình Duyệt):</label>
                         <input type="file" id="bundleFolderInput" webkitdirectory directory multiple>
-                        <small class="help-text">Lưu ý: Hộp thoại của Chrome ghi "Upload" nhưng dữ liệu <b>CHỈ ĐỌC VÀO RAM TRÌNH DUYỆT CÁ NHÂN</b>, hoàn toàn KHÔNG gửi lên server hay GitHub.</small>
+                        <small class="help-text">Lưu ý: Dữ liệu <b>CHỈ ĐỌC VÀO RAM TRÌNH DUYỆT</b>, hoàn toàn KHÔNG gửi lên server. Giải pháp lý tưởng cho Web Client tĩnh.</small>
                     </div>
                     <button class="btn btn-primary margin-top full-width" id="btnSubmitPath">
                         <i class="fa-solid fa-folder-plus"></i> Nạp Thư Mục Vào Trình Duyệt
