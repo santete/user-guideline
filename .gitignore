@@ -1,0 +1,7 @@
+# Ignore all OKF Knowledge Bundle folders & data files
+bot-okf/ga-okf/
+ga-okf/
+*.zip
+*.log
+.env
+.DS_Store

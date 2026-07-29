@@ -92,21 +92,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadBundlesList() {
         bundleSelectEl.innerHTML = '';
         
-        // 1. Default static bundle
-        const defaultOpt = document.createElement('option');
-        defaultOpt.value = 'ga-okf';
-        defaultOpt.textContent = 'Google OKF Default Bundle (ga-okf)';
-        if (currentBundleId === 'ga-okf') defaultOpt.selected = true;
-        bundleSelectEl.appendChild(defaultOpt);
-
-        // 2. Custom Imported Bundles from LocalStorage
-        Object.keys(localBundles).forEach(bId => {
-            const opt = document.createElement('option');
-            opt.value = bId;
-            opt.textContent = `${localBundles[bId].name} (${Object.keys(localBundles[bId].files).length} docs)`;
-            if (bId === currentBundleId) opt.selected = true;
-            bundleSelectEl.appendChild(opt);
-        });
+        const customIds = Object.keys(localBundles);
+        if (customIds.length === 0) {
+            const emptyOpt = document.createElement('option');
+            emptyOpt.value = '';
+            emptyOpt.textContent = '-- Chưa có Gói Tri Thức (Hãy Import) --';
+            bundleSelectEl.appendChild(emptyOpt);
+            currentBundleId = '';
+        } else {
+            customIds.forEach(bId => {
+                const opt = document.createElement('option');
+                opt.value = bId;
+                opt.textContent = `${localBundles[bId].name} (${Object.keys(localBundles[bId].files).length} docs)`;
+                if (bId === currentBundleId) opt.selected = true;
+                bundleSelectEl.appendChild(opt);
+            });
+            if (!currentBundleId || !localBundles[currentBundleId]) {
+                currentBundleId = customIds[0];
+            }
+        }
 
         loadOKFTree(currentBundleId);
     }
@@ -116,63 +120,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const bId = bundleId || bundleSelectEl.value || currentBundleId;
         currentBundleId = bId;
 
-        treeContainerEl.innerHTML = `
-            <div class="loading-state">
-                <i class="fa-solid fa-circle-notch fa-spin"></i>
-                <span>Đang nạp cây thư mục OKF...</span>
-            </div>`;
-
-        if (bId === 'ga-okf') {
-            okfBundleNameEl.textContent = 'ga-okf';
-            docCountTextEl.textContent = '81 tài liệu OKF';
-
+        if (!bId || !localBundles[bId]) {
+            okfBundleNameEl.textContent = 'Chưa chọn Bundle';
+            docCountTextEl.textContent = '0 tài liệu OKF';
             treeContainerEl.innerHTML = `
-                <div class="tree-nodes-list">
-                    <div class="tree-item" data-file="./ga-okf/index.md"><i class="fa-solid fa-file-lines"></i><span>index.md</span></div>
-                    <div class="tree-item" data-file="./ga-okf/log.md"><i class="fa-solid fa-file-lines"></i><span>log.md</span></div>
-                    <div class="tree-item"><i class="fa-solid fa-folder"></i><span>repos/gitlab-analytics</span></div>
-                    <div class="tree-node">
-                        <div class="tree-item" data-file="./ga-okf/repos/gitlab-analytics/index.md"><i class="fa-solid fa-file-lines"></i><span>index.md</span></div>
-                        <div class="tree-item"><i class="fa-solid fa-folder"></i><span>architecture</span></div>
-                        <div class="tree-node">
-                            <div class="tree-item" data-file="./ga-okf/repos/gitlab-analytics/architecture/api_surface.md"><i class="fa-solid fa-file-lines"></i><span>api_surface.md</span></div>
-                            <div class="tree-item" data-file="./ga-okf/repos/gitlab-analytics/architecture/dependencies.md"><i class="fa-solid fa-file-lines"></i><span>dependencies.md</span></div>
-                        </div>
-                        <div class="tree-item"><i class="fa-solid fa-folder"></i><span>governance</span></div>
-                        <div class="tree-node">
-                            <div class="tree-item" data-file="./ga-okf/repos/gitlab-analytics/governance/index.md"><i class="fa-solid fa-file-lines"></i><span>governance/index.md</span></div>
-                        </div>
-                    </div>
+                <div class="loading-state" style="flex-direction: column; text-align: center; gap: 12px;">
+                    <i class="fa-solid fa-folder-open" style="font-size: 32px; color: var(--accent-blue);"></i>
+                    <span>Chưa có gói tri thức OKF nào được chọn.</span>
+                    <button class="btn btn-primary btn-sm" onclick="document.getElementById('importBundleModal').classList.remove('hidden')">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Import OKF Bundle Ngay
+                    </button>
                 </div>`;
-
-            treeContainerEl.querySelectorAll('.tree-item[data-file]').forEach(item => {
-                item.addEventListener('click', () => {
-                    const filePath = item.getAttribute('data-file');
-                    openFileModalStatic(filePath, item.textContent);
-                });
-            });
-        } else if (localBundles[bId]) {
-            const bundle = localBundles[bId];
-            okfBundleNameEl.textContent = bundle.name;
-            const fileKeys = Object.keys(bundle.files);
-            docCountTextEl.textContent = `${fileKeys.length} tài liệu OKF`;
-
-            const container = document.createElement('div');
-            container.className = 'tree-nodes-list';
-
-            fileKeys.forEach(fPath => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'tree-item';
-                itemEl.innerHTML = `<i class="fa-solid fa-file-lines"></i><span>${fPath}</span>`;
-                itemEl.addEventListener('click', () => {
-                    openFileModalContent(fPath, bundle.files[fPath]);
-                });
-                container.appendChild(itemEl);
-            });
-
-            treeContainerEl.innerHTML = '';
-            treeContainerEl.appendChild(container);
+            return;
         }
+
+        const bundle = localBundles[bId];
+        okfBundleNameEl.textContent = bundle.name;
+        const fileKeys = Object.keys(bundle.files);
+        docCountTextEl.textContent = `${fileKeys.length} tài liệu OKF`;
+
+        const container = document.createElement('div');
+        container.className = 'tree-nodes-list';
+
+        fileKeys.forEach(fPath => {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'tree-item';
+            itemEl.innerHTML = `<i class="fa-solid fa-file-lines"></i><span>${fPath}</span>`;
+            itemEl.addEventListener('click', () => {
+                openFileModalContent(fPath, bundle.files[fPath]);
+            });
+            container.appendChild(itemEl);
+        });
+
+        treeContainerEl.innerHTML = '';
+        treeContainerEl.appendChild(container);
     }
 
     // 4. OPEN FILE MODALS & PREVIEWS
