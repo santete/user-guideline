@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google OKF Intelligence Bot - ProjectNow AI Gateway</title>
+    <title>Google OKF Intelligence Bot - Multi-Bundle Framework</title>
 
     <!-- Google Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,9 +16,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 
-    <!-- GitHub Markdown CSS & Mermaid Diagrams -->
+    <!-- GitHub Markdown CSS & Mermaid Diagrams & JSZip -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-dark.min.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <!-- Application CSS -->
     <link rel="stylesheet" href="./style.css">
@@ -29,15 +30,15 @@
         <!-- TOP HEADER NAVBAR -->
         <header class="app-header">
             <div class="logo-group">
-                <a href="../index.html" class="btn-back-home" title="Trở về Trang Hướng Dẫn">
+                <a href="../index.html" class="btn-back-home" title="Trở về Hub Hướng Dẫn">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div class="logo-badge">
                     <i class="fa-solid fa-brain"></i>
                 </div>
                 <div class="logo-text">
-                    <h1>OKF Intelligence Bot</h1>
-                    <span class="sub-text">ProjectNow OpenRouter Gateway</span>
+                    <h1>OKF Intelligence</h1>
+                    <span class="sub-text">Multi-Bundle Google OKF Framework</span>
                 </div>
             </div>
 
@@ -50,15 +51,19 @@
                 <div class="model-select-wrapper">
                     <i class="fa-solid fa-microchip select-icon"></i>
                     <select id="modelSelect" class="model-dropdown">
-                        <option value="google/gemini-2.0-flash-lite-preview-02-05:free">Gemini 2.0 Flash Lite (Free)</option>
                         <option value="nvidia/nemotron-3-super-120b-a12b:free">Nvidia Nemotron 3 Super 120B (Free)</option>
                         <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B Instruct (Free)</option>
+                        <option value="google/gemini-2.0-flash-lite-preview-02-05:free">Gemini 2.0 Flash Lite (Free)</option>
                         <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</option>
                         <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 Coder 32B (Free)</option>
                         <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
                         <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
                     </select>
                 </div>
+
+                <button class="btn btn-primary" id="btnHeaderImport" title="Import Gói Tri Thức Mới (ZIP / Path)">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Import OKF Bundle
+                </button>
 
                 <button class="btn btn-secondary" id="btnSettings" title="Cấu hình API Key">
                     <i class="fa-solid fa-gear"></i>
@@ -121,7 +126,7 @@
                 <div class="chat-header">
                     <div class="chat-info">
                         <span class="active-context-tag">
-                            <i class="fa-solid fa-database"></i> Direct Gateway: <strong id="okfBundleName">ga-okf</strong>
+                            <i class="fa-solid fa-database"></i> Context Bundle Active: <strong id="okfBundleName">ga-okf</strong>
                         </span>
                     </div>
                     <div class="chat-actions">
@@ -138,8 +143,8 @@
                         <div class="banner-icon">
                             <i class="fa-solid fa-comments"></i>
                         </div>
-                        <h2>ProjectNow OpenRouter AI Gateway</h2>
-                        <p>Web Client kết nối trực tiếp ProjectNow Supabase Gateway từ GitHub Pages (`https://santete.github.io`).</p>
+                        <h2>OKF Multi-Bundle Intelligence Framework</h2>
+                        <p>Import và truy vấn linh hoạt bất kỳ gói tri thức OKF (Open Knowledge Format) nào qua ProjectNow AI Gateway.</p>
                         
                         <div class="quick-suggestions">
                             <span class="suggestion-label">Gợi ý câu hỏi nhanh:</span>
@@ -161,7 +166,7 @@
                 <!-- CHAT INPUT CONTAINER -->
                 <div class="chat-input-wrapper">
                     <div class="chat-input-box">
-                        <textarea id="chatInput" placeholder="Nhập câu hỏi về gói tri thức OKF... (Enter để gửi, Shift+Enter xuống dòng)" rows="1"></textarea>
+                        <textarea id="chatInput" placeholder="Nhập câu hỏi về gói tri thức OKF đang chọn... (Enter để gửi, Shift+Enter xuống dòng)" rows="1"></textarea>
                         <button id="btnSend" class="btn-send" title="Gửi câu hỏi">
                             <i class="fa-solid fa-paper-plane"></i>
                         </button>
@@ -169,6 +174,61 @@
                 </div>
 
             </main>
+        </div>
+    </div>
+
+    <!-- MODAL IMPORT BUNDLE OKF -->
+    <div class="modal-overlay hidden" id="importBundleModal">
+        <div class="modal-card modal-sm">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-file-import"></i>
+                    <span>Import Gói Tri Thức OKF Mới</span>
+                </div>
+                <button class="btn-icon" id="btnCloseImportModal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="tab-controls">
+                    <button class="tab-btn active" id="tabZipBtn"><i class="fa-solid fa-file-zipper"></i> Nạp File ZIP</button>
+                    <button class="tab-btn" id="tabPathBtn"><i class="fa-solid fa-folder-open"></i> Đăng Ký Đường Dẫn Local</button>
+                </div>
+
+                <!-- TAB 1: UPLOAD ZIP -->
+                <div class="tab-content" id="tabZipContent">
+                    <div class="form-group margin-top">
+                        <label for="bundleZipName">Tên Gói Tri Thức (Bundle Name):</label>
+                        <input type="text" id="bundleZipName" placeholder="Ví dụ: E-Commerce Microservices OKF">
+                    </div>
+                    <div class="form-group margin-top">
+                        <label for="bundleZipFile">Chọn File ZIP (.zip):</label>
+                        <input type="file" id="bundleZipFile" accept=".zip">
+                        <small class="help-text">File ZIP chứa các thư mục chuẩn OKF (architecture, codebase, domain, governance...)</small>
+                    </div>
+                    <button class="btn btn-primary margin-top full-width" id="btnSubmitZip">
+                        <i class="fa-solid fa-upload"></i> Nạp Bundle ZIP
+                    </button>
+                </div>
+
+                <!-- TAB 2: REGISTER LOCAL PATH -->
+                <div class="tab-content hidden" id="tabPathContent">
+                    <div class="form-group margin-top">
+                        <label for="bundlePathName">Tên Gói Tri Thức (Bundle Name):</label>
+                        <input type="text" id="bundlePathName" placeholder="Ví dụ: Core Banking OKF Bundle">
+                    </div>
+                    <div class="form-group margin-top">
+                        <label for="bundleLocalPath">Đường Dẫn Thư Mục Trên Máy (Local Path):</label>
+                        <input type="text" id="bundleLocalPath" placeholder="C:\projects\my-okf-bundle">
+                        <small class="help-text">Đường dẫn tuyệt đối hoặc tương đối tới thư mục gói OKF</small>
+                    </div>
+                    <button class="btn btn-primary margin-top full-width" id="btnSubmitPath">
+                        <i class="fa-solid fa-folder-plus"></i> Đăng Ký Đường Dẫn
+                    </button>
+                </div>
+
+                <div id="importStatus" class="margin-top hidden"></div>
+            </div>
         </div>
     </div>
 
@@ -181,13 +241,13 @@
                     <span id="modalFileName">Chi tiết tài liệu</span>
                 </div>
                 <div class="modal-header-actions">
-                    <a id="btnOpenNewTab" href="#" target="_blank" class="btn btn-secondary btn-sm" title="Mở file raw bằng Extension Trình Duyệt">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Extension Trình Duyệt
+                    <a id="btnOpenNewTab" href="#" target="_blank" class="btn btn-secondary btn-sm" title="Mở file raw bằng Markdown Extension của Trình Duyệt">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở bằng Extension Trình Duyệt
                     </a>
-                    <button class="btn btn-secondary btn-sm" id="btnCopyMarkdown" title="Sao chép nội dung Markdown">
+                    <button class="btn btn-secondary btn-sm" id="btnCopyMarkdown" title="Sao chép toàn bộ nội dung Markdown">
                         <i class="fa-solid fa-copy"></i> Copy Raw
                     </button>
-                    <button class="btn btn-secondary btn-sm" id="btnToggleRaw" title="Chuyển chế độ xem Raw Code / Rendered">
+                    <button class="btn btn-secondary btn-sm" id="btnToggleRaw" title="Chuyển chế độ xem Raw Code / Rendered Markdown">
                         <i class="fa-solid fa-code"></i> Raw Code
                     </button>
                     <button class="btn-icon" id="btnCloseModal">
@@ -225,7 +285,7 @@
                 <div class="form-group margin-top">
                     <label for="apiKeyInput">OpenRouter API Key (`sk-or-v1-...`):</label>
                     <input type="password" id="apiKeyInput" placeholder="sk-or-v1-xxxxxxxxxxxx">
-                    <small class="help-text">OpenRouter Key cá nhân của bạn.</small>
+                    <small class="help-text">OpenRouter Key quản lý mô hình AI của bạn.</small>
                 </div>
                 <div class="form-group margin-top">
                     <label for="gatewayUrlInput">ProjectNow Gateway Endpoint:</label>

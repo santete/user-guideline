@@ -3,6 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let messageHistory = [];
     let isStreaming = false;
     let currentBundleId = 'ga-okf';
+    let currentRawContent = '';
+    let isRawMode = false;
+
+    // Custom In-Memory & LocalStorage Bundles Store
+    let localBundles = JSON.parse(localStorage.getItem('okf_custom_bundles') || '{}');
 
     // DOM Elements
     const apiKeyStatusEl = document.getElementById('apiKeyStatus');
@@ -15,11 +20,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const gatewayUrlInputEl = document.getElementById('gatewayUrlInput');
     const btnSaveSettingsEl = document.getElementById('btnSaveSettings');
 
-    // Bundle Elements
+    // Bundle Manager Elements
     const bundleSelectEl = document.getElementById('bundleSelect');
     const btnHeaderImportEl = document.getElementById('btnHeaderImport');
     const importBundleModalEl = document.getElementById('importBundleModal');
     const btnCloseImportModalEl = document.getElementById('btnCloseImportModal');
+    const tabZipBtn = document.getElementById('tabZipBtn');
+    const tabPathBtn = document.getElementById('tabPathBtn');
+    const tabZipContent = document.getElementById('tabZipContent');
+    const tabPathContent = document.getElementById('tabPathContent');
+    const btnSubmitZip = document.getElementById('btnSubmitZip');
+    const btnSubmitPath = document.getElementById('btnSubmitPath');
+    const importStatusEl = document.getElementById('importStatus');
 
     const treeContainerEl = document.getElementById('treeContainer');
     const treeSearchInputEl = document.getElementById('treeSearchInput');
@@ -40,10 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCopyMarkdownEl = document.getElementById('btnCopyMarkdown');
     const btnToggleRawEl = document.getElementById('btnToggleRaw');
 
-    let currentRawContent = '';
-    let isRawMode = false;
-
-    // ProjectNow OpenRouter Gateway Credentials (GitHub Pages Direct Integration)
+    // Default Gateway Keys
     const DEFAULT_PARTNER_KEY = 'pj_live_89f0039b1111c8e0bfeb07cb87d9da7a';
     const DEFAULT_OPENROUTER_KEY = '';
     const DEFAULT_GATEWAY_URL = 'https://mygkmiofmbhnxzrvrqml.supabase.co/functions/v1/ai-gateway';
@@ -65,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (apiKeyInputEl) apiKeyInputEl.value = localStorage.getItem('openrouter_api_key') || DEFAULT_OPENROUTER_KEY;
     if (gatewayUrlInputEl) gatewayUrlInputEl.value = localStorage.getItem('projectnow_gateway_url') || DEFAULT_GATEWAY_URL;
 
-    // 1. HEALTH CHECK & GATEWAY STATUS
+    // 1. HEALTH CHECK & STATUS
     function checkHealth() {
         const partnerKey = localStorage.getItem('projectnow_partner_key') || DEFAULT_PARTNER_KEY;
         const openrouterKey = localStorage.getItem('openrouter_api_key') || DEFAULT_OPENROUTER_KEY;
@@ -75,59 +84,98 @@ document.addEventListener('DOMContentLoaded', () => {
             apiKeyStatusEl.querySelector('.status-label').textContent = 'ProjectNow Gateway Live';
         } else {
             apiKeyStatusEl.querySelector('.dot').className = 'dot yellow';
-            apiKeyStatusEl.querySelector('.status-label').textContent = 'Thiếu API Key';
+            apiKeyStatusEl.querySelector('.status-label').textContent = 'Chưa nhập OpenRouter Key';
         }
     }
 
-    // 2. STATIC BUNDLE LOADER
-    const availableBundles = [
-        { id: 'ga-okf', name: 'Google OKF Default Bundle (ga-okf)', root: './ga-okf' }
-    ];
-
+    // 2. LOAD BUNDLES LIST
     function loadBundlesList() {
         bundleSelectEl.innerHTML = '';
-        availableBundles.forEach(b => {
+        
+        // 1. Default static bundle
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = 'ga-okf';
+        defaultOpt.textContent = 'Google OKF Default Bundle (ga-okf)';
+        if (currentBundleId === 'ga-okf') defaultOpt.selected = true;
+        bundleSelectEl.appendChild(defaultOpt);
+
+        // 2. Custom Imported Bundles from LocalStorage
+        Object.keys(localBundles).forEach(bId => {
             const opt = document.createElement('option');
-            opt.value = b.id;
-            opt.textContent = b.name;
-            if (b.id === currentBundleId) opt.selected = true;
+            opt.value = bId;
+            opt.textContent = `${localBundles[bId].name} (${Object.keys(localBundles[bId].files).length} docs)`;
+            if (bId === currentBundleId) opt.selected = true;
             bundleSelectEl.appendChild(opt);
         });
-        renderTreeStatic();
+
+        loadOKFTree(currentBundleId);
     }
 
-    function renderTreeStatic() {
-        okfBundleNameEl.textContent = 'ga-okf';
-        docCountTextEl.textContent = '81 tài liệu OKF';
+    // 3. LOAD OKF TREE EXPLORER
+    async function loadOKFTree(bundleId) {
+        const bId = bundleId || bundleSelectEl.value || currentBundleId;
+        currentBundleId = bId;
 
         treeContainerEl.innerHTML = `
-            <div class="tree-nodes-list">
-                <div class="tree-item" data-file="./ga-okf/index.md"><i class="fa-solid fa-file-lines"></i><span>index.md</span></div>
-                <div class="tree-item" data-file="./ga-okf/log.md"><i class="fa-solid fa-file-lines"></i><span>log.md</span></div>
-                <div class="tree-item"><i class="fa-solid fa-folder"></i><span>repos/gitlab-analytics</span></div>
-                <div class="tree-node">
-                    <div class="tree-item" data-file="./ga-okf/repos/gitlab-analytics/index.md"><i class="fa-solid fa-file-lines"></i><span>index.md</span></div>
-                    <div class="tree-item"><i class="fa-solid fa-folder"></i><span>architecture</span></div>
-                    <div class="tree-node">
-                        <div class="tree-item" data-file="./ga-okf/repos/gitlab-analytics/architecture/api_surface.md"><i class="fa-solid fa-file-lines"></i><span>api_surface.md</span></div>
-                        <div class="tree-item" data-file="./ga-okf/repos/gitlab-analytics/architecture/dependencies.md"><i class="fa-solid fa-file-lines"></i><span>dependencies.md</span></div>
-                    </div>
-                    <div class="tree-item"><i class="fa-solid fa-folder"></i><span>governance</span></div>
-                    <div class="tree-node">
-                        <div class="tree-item" data-file="./ga-okf/repos/gitlab-analytics/governance/index.md"><i class="fa-solid fa-file-lines"></i><span>governance/index.md</span></div>
-                    </div>
-                </div>
+            <div class="loading-state">
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                <span>Đang nạp cây thư mục OKF...</span>
             </div>`;
 
-        treeContainerEl.querySelectorAll('.tree-item[data-file]').forEach(item => {
-            item.addEventListener('click', () => {
-                const filePath = item.getAttribute('data-file');
-                openFileModalStatic(filePath, item.textContent);
+        if (bId === 'ga-okf') {
+            okfBundleNameEl.textContent = 'ga-okf';
+            docCountTextEl.textContent = '81 tài liệu OKF';
+
+            treeContainerEl.innerHTML = `
+                <div class="tree-nodes-list">
+                    <div class="tree-item" data-file="./ga-okf/index.md"><i class="fa-solid fa-file-lines"></i><span>index.md</span></div>
+                    <div class="tree-item" data-file="./ga-okf/log.md"><i class="fa-solid fa-file-lines"></i><span>log.md</span></div>
+                    <div class="tree-item"><i class="fa-solid fa-folder"></i><span>repos/gitlab-analytics</span></div>
+                    <div class="tree-node">
+                        <div class="tree-item" data-file="./ga-okf/repos/gitlab-analytics/index.md"><i class="fa-solid fa-file-lines"></i><span>index.md</span></div>
+                        <div class="tree-item"><i class="fa-solid fa-folder"></i><span>architecture</span></div>
+                        <div class="tree-node">
+                            <div class="tree-item" data-file="./ga-okf/repos/gitlab-analytics/architecture/api_surface.md"><i class="fa-solid fa-file-lines"></i><span>api_surface.md</span></div>
+                            <div class="tree-item" data-file="./ga-okf/repos/gitlab-analytics/architecture/dependencies.md"><i class="fa-solid fa-file-lines"></i><span>dependencies.md</span></div>
+                        </div>
+                        <div class="tree-item"><i class="fa-solid fa-folder"></i><span>governance</span></div>
+                        <div class="tree-node">
+                            <div class="tree-item" data-file="./ga-okf/repos/gitlab-analytics/governance/index.md"><i class="fa-solid fa-file-lines"></i><span>governance/index.md</span></div>
+                        </div>
+                    </div>
+                </div>`;
+
+            treeContainerEl.querySelectorAll('.tree-item[data-file]').forEach(item => {
+                item.addEventListener('click', () => {
+                    const filePath = item.getAttribute('data-file');
+                    openFileModalStatic(filePath, item.textContent);
+                });
             });
-        });
+        } else if (localBundles[bId]) {
+            const bundle = localBundles[bId];
+            okfBundleNameEl.textContent = bundle.name;
+            const fileKeys = Object.keys(bundle.files);
+            docCountTextEl.textContent = `${fileKeys.length} tài liệu OKF`;
+
+            const container = document.createElement('div');
+            container.className = 'tree-nodes-list';
+
+            fileKeys.forEach(fPath => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'tree-item';
+                itemEl.innerHTML = `<i class="fa-solid fa-file-lines"></i><span>${fPath}</span>`;
+                itemEl.addEventListener('click', () => {
+                    openFileModalContent(fPath, bundle.files[fPath]);
+                });
+                container.appendChild(itemEl);
+            });
+
+            treeContainerEl.innerHTML = '';
+            treeContainerEl.appendChild(container);
+        }
     }
 
-    // 3. READ FILE DIRECTLY IN BROWSER
+    // 4. OPEN FILE MODALS & PREVIEWS
     async function openFileModalStatic(filePath, fileName) {
         modalFileNameEl.textContent = fileName;
         modalFileContentEl.innerHTML = `
@@ -139,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnOpenNewTabEl) btnOpenNewTabEl.href = filePath;
         fileModalEl.classList.remove('hidden');
         isRawMode = false;
+        if (btnToggleRawEl) btnToggleRawEl.innerHTML = '<i class="fa-solid fa-code"></i> Raw Code';
 
         try {
             const res = await fetch(filePath);
@@ -148,6 +197,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             modalFileContentEl.innerHTML = `<div style="color: var(--accent-rose);">Lỗi đọc file: ${err.message}</div>`;
         }
+    }
+
+    function openFileModalContent(fileName, content) {
+        modalFileNameEl.textContent = fileName;
+        currentRawContent = content;
+        fileModalEl.classList.remove('hidden');
+        isRawMode = false;
+        if (btnToggleRawEl) btnToggleRawEl.innerHTML = '<i class="fa-solid fa-code"></i> Raw Code';
+        renderModalBody();
     }
 
     function renderModalBody() {
@@ -184,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderModalBody();
     });
 
-    // 4. DIRECT CALL TO PROJECTNOW AI GATEWAY (GITHUB PAGES CLIENT)
+    // 5. DIRECT CALL TO PROJECTNOW AI GATEWAY
     async function sendMessage(textQuery) {
         const query = textQuery || chatInputEl.value.trim();
         if (!query || isStreaming) return;
@@ -293,24 +351,116 @@ document.addEventListener('DOMContentLoaded', () => {
         return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
-    // Event Handlers
-    if (btnHeaderImportEl) btnHeaderImportEl.addEventListener('click', () => importBundleModalEl.classList.remove('hidden'));
+    // 6. IMPORT BUNDLE (CLIENT-SIDE JSZIP EXTRACTION)
+    btnHeaderImportEl?.addEventListener('click', () => importBundleModalEl.classList.remove('hidden'));
     btnCloseImportModalEl?.addEventListener('click', () => importBundleModalEl.classList.add('hidden'));
 
-    btnSendEl.addEventListener('click', () => sendMessage());
-    chatInputEl.addEventListener('keydown', (e) => {
+    tabZipBtn?.addEventListener('click', () => {
+        tabZipBtn.classList.add('active');
+        tabPathBtn.classList.remove('active');
+        tabZipContent.classList.remove('hidden');
+        tabPathContent.classList.add('hidden');
+    });
+
+    tabPathBtn?.addEventListener('click', () => {
+        tabPathBtn.classList.add('active');
+        tabZipBtn.classList.remove('active');
+        tabPathContent.classList.remove('hidden');
+        tabZipContent.classList.add('hidden');
+    });
+
+    // Handle Client-Side ZIP File Extraction
+    btnSubmitZip?.addEventListener('click', async () => {
+        const name = document.getElementById('bundleZipName').value.trim();
+        const fileInput = document.getElementById('bundleZipFile');
+        if (!name || !fileInput.files[0]) {
+            showImportStatus('Vui lòng nhập tên bundle và chọn file ZIP.', 'rose');
+            return;
+        }
+
+        if (!window.JSZip) {
+            showImportStatus('Thư viện JSZip chưa sẵn sàng.', 'rose');
+            return;
+        }
+
+        showImportStatus('<i class="fa-solid fa-circle-notch fa-spin"></i> Đang giải nén file ZIP trong trình duyệt...', 'blue');
+
+        try {
+            const zip = await JSZip.loadAsync(fileInput.files[0]);
+            const bundleId = 'bundle_' + Date.now();
+            const extractedFiles = {};
+
+            const promises = [];
+            zip.forEach((relPath, fileObj) => {
+                if (!fileObj.dir && (relPath.endsWith('.md') || relPath.endsWith('.json') || relPath.endsWith('.txt'))) {
+                    promises.push(
+                        fileObj.async('string').then(content => {
+                            extractedFiles[relPath] = content;
+                        })
+                    );
+                }
+            });
+
+            await Promise.all(promises);
+
+            localBundles[bundleId] = {
+                id: bundleId,
+                name: name,
+                files: extractedFiles
+            };
+
+            localStorage.setItem('okf_custom_bundles', JSON.stringify(localBundles));
+            currentBundleId = bundleId;
+
+            showImportStatus(`Đã nạp thành công ${Object.keys(extractedFiles).length} tài liệu OKF!`, 'emerald');
+            setTimeout(() => {
+                importBundleModalEl.classList.add('hidden');
+                importStatusEl.classList.add('hidden');
+                loadBundlesList();
+            }, 1200);
+
+        } catch (err) {
+            showImportStatus(`Lỗi giải nén ZIP: ${err.message}`, 'rose');
+        }
+    });
+
+    btnSubmitPath?.addEventListener('click', () => {
+        const name = document.getElementById('bundlePathName').value.trim();
+        const path = document.getElementById('bundleLocalPath').value.trim();
+        if (!name || !path) {
+            showImportStatus('Vui lòng nhập tên bundle và đường dẫn.', 'rose');
+            return;
+        }
+        showImportStatus('Trên GitHub Pages, vui lòng sử dụng tab "Nạp File ZIP" để import bundle tri thức.', 'amber');
+    });
+
+    function showImportStatus(msg, color) {
+        importStatusEl.innerHTML = msg;
+        importStatusEl.style.color = `var(--accent-${color})`;
+        importStatusEl.classList.remove('hidden');
+    }
+
+    // Event Listeners
+    bundleSelectEl?.addEventListener('change', (e) => {
+        currentBundleId = e.target.value;
+        loadOKFTree(currentBundleId);
+    });
+
+    btnSendEl?.addEventListener('click', () => sendMessage());
+
+    chatInputEl?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             sendMessage();
         }
     });
 
-    chatInputEl.addEventListener('input', () => {
+    chatInputEl?.addEventListener('input', () => {
         chatInputEl.style.height = 'auto';
         chatInputEl.style.height = Math.min(chatInputEl.scrollHeight, 150) + 'px';
     });
 
-    btnClearChatEl.addEventListener('click', () => {
+    btnClearChatEl?.addEventListener('click', () => {
         messageHistory = [];
         chatMessagesEl.innerHTML = `
             <div class="welcome-banner">
@@ -328,12 +478,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    btnSettingsEl.addEventListener('click', () => settingsModalEl.classList.remove('hidden'));
-    btnCloseSettingsEl.addEventListener('click', () => settingsModalEl.classList.add('hidden'));
-    btnCloseModalEl.addEventListener('click', () => fileModalEl.classList.add('hidden'));
-    btnReloadTreeEl.addEventListener('click', () => renderTreeStatic());
+    btnSettingsEl?.addEventListener('click', () => settingsModalEl.classList.remove('hidden'));
+    btnCloseSettingsEl?.addEventListener('click', () => settingsModalEl.classList.add('hidden'));
+    btnCloseModalEl?.addEventListener('click', () => fileModalEl.classList.add('hidden'));
+    btnReloadTreeEl?.addEventListener('click', () => loadOKFTree(currentBundleId));
 
-    btnSaveSettingsEl.addEventListener('click', () => {
+    treeSearchInputEl?.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const items = treeContainerEl.querySelectorAll('.tree-item');
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(term) ? 'flex' : 'none';
+        });
+    });
+
+    btnSaveSettingsEl?.addEventListener('click', () => {
         const partnerKey = partnerKeyInputEl ? partnerKeyInputEl.value.trim() : '';
         const openrouterKey = apiKeyInputEl ? apiKeyInputEl.value.trim() : '';
         const gatewayUrl = gatewayUrlInputEl ? gatewayUrlInputEl.value.trim() : '';
