@@ -187,6 +187,42 @@ document.addEventListener('DOMContentLoaded', () => {
         container.className = 'tree-nodes-list';
         treeContainerEl.innerHTML = '';
 
+        // Common Tree Renderer
+        let docCount = 0;
+        function renderTree(items, parentEl, isBackend, bundleId, bundleObj) {
+            items.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'tree-item';
+                if (item.is_dir) {
+                    el.classList.add('folder');
+                    el.innerHTML = `<i class="fa-solid fa-folder"></i><span>${item.name}</span>`;
+                    const childrenContainer = document.createElement('div');
+                    childrenContainer.className = 'tree-children hidden';
+                    renderTree(item.children || [], childrenContainer, isBackend, bundleId, bundleObj);
+                    
+                    el.addEventListener('click', (e) => {
+                        if (e.target !== el && e.target.parentElement !== el) return;
+                        const isHidden = childrenContainer.classList.contains('hidden');
+                        childrenContainer.classList.toggle('hidden');
+                        el.querySelector('i').className = isHidden ? 'fa-solid fa-folder-open' : 'fa-solid fa-folder';
+                    });
+                    parentEl.appendChild(el);
+                    parentEl.appendChild(childrenContainer);
+                } else {
+                    if (item.extension === '.md' || item.extension === '.json') docCount++;
+                    el.innerHTML = `<i class="fa-solid fa-file-lines"></i><span>${item.name}</span>`;
+                    el.addEventListener('click', () => {
+                        if (isBackend) {
+                            openFileModalBackend(bundleId, item.rel_path, item.name);
+                        } else {
+                            openFileModalContent(item.rel_path, bundleObj.files[item.rel_path]);
+                        }
+                    });
+                    parentEl.appendChild(el);
+                }
+            });
+        }
+
         if (backendBundles[bId]) {
             // BACKEND MODE TREE
             okfBundleNameEl.textContent = backendBundles[bId].name;
@@ -194,38 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const res = await fetch(`/api/okf/tree?bundle_id=${bId}`);
                 const data = await res.json();
                 
-                let docCount = 0;
-                function renderTree(items, parentEl) {
-                    items.forEach(item => {
-                        const el = document.createElement('div');
-                        el.className = 'tree-item';
-                        if (item.is_dir) {
-                            el.classList.add('folder');
-                            el.innerHTML = `<i class="fa-solid fa-folder"></i><span>${item.name}</span>`;
-                            const childrenContainer = document.createElement('div');
-                            childrenContainer.className = 'tree-children hidden';
-                            renderTree(item.children || [], childrenContainer);
-                            
-                            el.addEventListener('click', (e) => {
-                                if (e.target !== el && e.target.parentElement !== el) return;
-                                const isHidden = childrenContainer.classList.contains('hidden');
-                                childrenContainer.classList.toggle('hidden');
-                                el.querySelector('i').className = isHidden ? 'fa-solid fa-folder-open' : 'fa-solid fa-folder';
-                            });
-                            parentEl.appendChild(el);
-                            parentEl.appendChild(childrenContainer);
-                        } else {
-                            if (item.extension === '.md' || item.extension === '.json') docCount++;
-                            el.innerHTML = `<i class="fa-solid fa-file-lines"></i><span>${item.name}</span>`;
-                            el.addEventListener('click', () => {
-                                openFileModalBackend(bId, item.rel_path, item.name);
-                            });
-                            parentEl.appendChild(el);
-                        }
-                    });
-                }
-                
-                renderTree(data.tree, container);
+                renderTree(data.tree, container, true, bId, null);
                 docCountTextEl.textContent = `${docCount} tài liệu OKF`;
                 treeContainerEl.appendChild(container);
             } catch (err) {
@@ -236,17 +241,38 @@ document.addEventListener('DOMContentLoaded', () => {
             const bundle = localBundles[bId];
             okfBundleNameEl.textContent = bundle.name;
             const fileKeys = Object.keys(bundle.files);
-            docCountTextEl.textContent = `${fileKeys.length} tài liệu OKF`;
-
-            fileKeys.forEach(fPath => {
-                const itemEl = document.createElement('div');
-                itemEl.className = 'tree-item';
-                itemEl.innerHTML = `<i class="fa-solid fa-file-lines"></i><span>${fPath}</span>`;
-                itemEl.addEventListener('click', () => {
-                    openFileModalContent(fPath, bundle.files[fPath]);
+            
+            // Build tree structure from flat paths
+            const rootTree = [];
+            fileKeys.forEach(path => {
+                const parts = path.split('/');
+                let currentLevel = rootTree;
+                parts.forEach((part, index) => {
+                    if (index === parts.length - 1) {
+                        currentLevel.push({ name: part, is_dir: false, rel_path: path, extension: part.substring(part.lastIndexOf('.')) });
+                    } else {
+                        let existing = currentLevel.find(item => item.is_dir && item.name === part);
+                        if (!existing) {
+                            existing = { name: part, is_dir: true, children: [] };
+                            currentLevel.push(existing);
+                        }
+                        currentLevel = existing.children;
+                    }
                 });
-                container.appendChild(itemEl);
             });
+
+            // Sort folders first
+            function sortTree(nodes) {
+                nodes.sort((a, b) => {
+                    if (a.is_dir === b.is_dir) return a.name.localeCompare(b.name);
+                    return a.is_dir ? -1 : 1;
+                });
+                nodes.forEach(n => { if (n.is_dir) sortTree(n.children); });
+            }
+            sortTree(rootTree);
+
+            renderTree(rootTree, container, false, bId, bundle);
+            docCountTextEl.textContent = `${docCount} tài liệu OKF`;
             treeContainerEl.appendChild(container);
         }
     }
@@ -475,7 +501,8 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
         const requestBody = {
             model: selectedModel,
             messages: payloadMessages,
-            temperature: 0.3
+            temperature: 0.3,
+            stream: true
         };
 
         if (openrouterKey) {
@@ -495,10 +522,51 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
                 throw new Error(errData.error || errData.message || errData.detail || `Lỗi HTTP ${response.status}`);
             }
 
-            const data = await response.json();
-            const fullResponseText = data.content || data.choices?.[0]?.message?.content || JSON.stringify(data);
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let fullResponseText = '';
+            let buffer = '';
 
-            renderMarkdown(bubbleEl, fullResponseText);
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                
+                // Keep the last partial line in the buffer
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    if (line.trim() === '') continue;
+                    if (line.trim() === 'data: [DONE]') continue;
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.substring(6));
+                            const content = data.choices?.[0]?.delta?.content || '';
+                            fullResponseText += content;
+                            
+                            // Streaming update UI
+                            renderMarkdown(bubbleEl, fullResponseText);
+                            chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+                        } catch (e) {
+                            console.warn("Lỗi parse SSE chunk:", e, line);
+                        }
+                    }
+                }
+            }
+
+            // Flush remaining buffer if it's a valid JSON block without 'data: ' prefix
+            if (buffer.trim().startsWith('{')) {
+                try {
+                     const data = JSON.parse(buffer);
+                     if (data.content || (data.choices && data.choices[0].message.content)) {
+                         fullResponseText = data.content || data.choices[0].message.content;
+                         renderMarkdown(bubbleEl, fullResponseText);
+                     }
+                } catch(e) {}
+            }
+
             messageHistory.push({ role: 'assistant', content: fullResponseText });
 
         } catch (err) {
