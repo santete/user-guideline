@@ -511,7 +511,10 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
         }
 
         try {
-            const response = await fetch(gatewayUrl, {
+            // DUAL-MODE GATEWAY ROUTING
+            const targetEndpoint = (isLocalMode && backendBundles[currentBundleId]) ? '/api/ai-gateway' : gatewayUrl;
+
+            const response = await fetch(targetEndpoint, {
                 method: 'POST',
                 headers: reqHeaders,
                 body: JSON.stringify(requestBody)
