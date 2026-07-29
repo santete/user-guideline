@@ -223,7 +223,74 @@ document.addEventListener('DOMContentLoaded', () => {
         renderModalBody();
     });
 
-    // 5. DIRECT CALL TO PROJECTNOW AI GATEWAY
+    // 5. CLIENT-SIDE OKF CONTEXT SEARCH & RETRIEVAL ENGINE (FROM BROWSER MEMORY)
+    function buildOKFContextFromMemory(bundle, query) {
+        if (!bundle || !bundle.files) return "Chưa nạp gói tri thức OKF nào.";
+
+        const fileKeys = Object.keys(bundle.files);
+        if (fileKeys.length === 0) return "Gói tri thức OKF trống.";
+
+        const queryLower = query.toLowerCase();
+        const keywords = queryLower.split(/\s+/).filter(w => w.length > 2);
+
+        let selectedDocs = [];
+        let totalLength = 0;
+        const MAX_CONTEXT_BYTES = 45000; // Safe payload limit for LLM system prompt
+
+        // 1. Always prioritize index.md and root files
+        fileKeys.forEach(filePath => {
+            const lowerPath = filePath.toLowerCase();
+            if (lowerPath.includes('index.md') || lowerPath.endsWith('readme.md')) {
+                const content = bundle.files[filePath];
+                selectedDocs.push({ path: filePath, content: content, score: 100 });
+                totalLength += content.length;
+            }
+        });
+
+        // 2. Score remaining files based on keyword relevance
+        const scoredDocs = [];
+        fileKeys.forEach(filePath => {
+            if (selectedDocs.some(d => d.path === filePath)) return;
+
+            const content = bundle.files[filePath];
+            const lowerContent = content.toLowerCase();
+            const lowerPath = filePath.toLowerCase();
+
+            let score = 0;
+            keywords.forEach(kw => {
+                if (lowerPath.includes(kw)) score += 25;
+                const matches = (lowerContent.match(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+                score += matches * 2;
+            });
+
+            if (score > 0) {
+                scoredDocs.push({ path: filePath, content: content, score: score });
+            }
+        });
+
+        scoredDocs.sort((a, b) => b.score - a.score);
+
+        for (const doc of scoredDocs) {
+            if (totalLength + doc.content.length > MAX_CONTEXT_BYTES) break;
+            selectedDocs.push(doc);
+            totalLength += doc.content.length;
+        }
+
+        // Fill up to limit if total bundle size is small
+        if (selectedDocs.length < fileKeys.length && totalLength < MAX_CONTEXT_BYTES) {
+            for (const filePath of fileKeys) {
+                if (selectedDocs.some(d => d.path === filePath)) continue;
+                const content = bundle.files[filePath];
+                if (totalLength + content.length > MAX_CONTEXT_BYTES) break;
+                selectedDocs.push({ path: filePath, content: content, score: 1 });
+                totalLength += content.length;
+            }
+        }
+
+        return selectedDocs.map(d => `--- FILE: ${d.path} ---\n${d.content}`).join('\n\n');
+    }
+
+    // 6. DIRECT PROJECTNOW AI GATEWAY CALL WITH OKF CONTEXT
     async function sendMessage(textQuery) {
         const query = textQuery || chatInputEl.value.trim();
         if (!query || isStreaming) return;
@@ -237,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const assistantMsgEl = appendMessage('assistant', '');
         const bubbleEl = assistantMsgEl.querySelector('.msg-bubble');
-        bubbleEl.innerHTML = '<span class="typing-cursor"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang kết nối ProjectNow AI Gateway...</span>';
+        bubbleEl.innerHTML = '<span class="typing-cursor"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang truy vấn dữ liệu OKF & gửi AI Gateway...</span>';
 
         isStreaming = true;
         btnSendEl.disabled = true;
@@ -249,10 +316,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const gatewayUrl = localStorage.getItem('projectnow_gateway_url') || DEFAULT_GATEWAY_URL;
         const selectedModel = modelSelectEl.value;
 
+        // Build OKF Context from active bundle in browser memory
+        const activeBundle = localBundles[currentBundleId];
+        const okfContext = buildOKFContextFromMemory(activeBundle, query);
+        const bundleName = activeBundle ? activeBundle.name : 'Chưa chọn Bundle';
+
+        const systemPrompt = `Bạn là trợ lý AI chuyên gia phân tích và giải đáp dữ liệu dựa trên Giao thức Tri thức OKF (Open Knowledge Format) của Google.
+
+DƯỚI ĐÂY LÀ NỘI DUNG TÀI LIỆU CỦA GÓI TRI THỨC OKF ĐANG ACTIVE ("${bundleName}") ĐƯỢC NẠP TRỰC TIẾP TỪ BỘ NHỚ:
+
+==================== NỘI DUNG GÓI TRI THỨC OKF BẮT ĐẦU ====================
+${okfContext}
+==================== NỘI DUNG GÓI TRI THỨC OKF KẾT THÚC ====================
+
+QUY TẮC PHẢN HỒI QUAN TRỌNG:
+1. Hãy giải đáp câu hỏi của người dùng CHÍNH XÁC dựa vào thông tin có trong gói tri thức OKF ở trên.
+2. Nêu rõ tên file tài liệu OKF tương ứng khi trích dẫn thông tin (ví dụ: "Theo tài liệu \`repos/gitlab-analytics/index.md\`...").
+3. Trình bày phản hồi chuyên nghiệp, đẹp mắt bằng Markdown, bảng biểu và khối mã code (nếu có).`;
+
         const payloadMessages = [
             {
                 role: 'system',
-                content: 'Bạn là trợ lý AI chuyên gia giải đáp dữ liệu dựa trên Giao thức Tri thức OKF (Open Knowledge Format) của Google.'
+                content: systemPrompt
             },
             ...messageHistory
         ];
