@@ -257,19 +257,27 @@ document.addEventListener('DOMContentLoaded', () => {
             ...messageHistory
         ];
 
+        const reqHeaders = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${partnerKey}`
+        };
+
+        const requestBody = {
+            model: selectedModel,
+            messages: payloadMessages,
+            temperature: 0.3
+        };
+
+        if (openrouterKey) {
+            requestBody.openrouter_api_key = openrouterKey;
+            requestBody.api_key = openrouterKey;
+        }
+
         try {
             const response = await fetch(gatewayUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${partnerKey}`,
-                    'x-openrouter-api-key': openrouterKey
-                },
-                body: JSON.stringify({
-                    model: selectedModel,
-                    messages: payloadMessages,
-                    temperature: 0.3
-                })
+                headers: reqHeaders,
+                body: JSON.stringify(requestBody)
             });
 
             if (!response.ok) {
