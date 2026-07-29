@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCopyMarkdownEl = document.getElementById('btnCopyMarkdown');
     const btnToggleRawEl = document.getElementById('btnToggleRaw');
 
-    // Default Gateway Keys
-    const DEFAULT_PARTNER_KEY = 'pj_live_89f0039b1111c8e0bfeb07cb87d9da7a';
+    // ProjectNow OpenRouter Gateway Credentials (GitHub Pages Direct Integration)
+    const DEFAULT_PARTNER_KEY = 'pj_live_98244722e4273d34e015b82d279e5867';
     const DEFAULT_OPENROUTER_KEY = '';
     const DEFAULT_GATEWAY_URL = 'https://mygkmiofmbhnxzrvrqml.supabase.co/functions/v1/ai-gateway';
 
