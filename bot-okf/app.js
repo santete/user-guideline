@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let selectedDocs = [];
         let totalLength = 0;
-        const MAX_CONTEXT_BYTES = 45000; // Safe payload limit for LLM system prompt
+        const MAX_CONTEXT_BYTES = 300000; // Tăng lên 300KB (~75k tokens) để nạp trọn vẹn các bundle vừa/nhỏ
 
         // 1. Always prioritize index.md and root files
         fileKeys.forEach(filePath => {
