@@ -424,14 +424,54 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    btnSubmitPath?.addEventListener('click', () => {
+    btnSubmitPath?.addEventListener('click', async () => {
         const name = document.getElementById('bundlePathName').value.trim();
-        const path = document.getElementById('bundleLocalPath').value.trim();
-        if (!name || !path) {
-            showImportStatus('Vui lòng nhập tên bundle và đường dẫn.', 'rose');
+        const folderInput = document.getElementById('bundleFolderInput');
+        
+        if (!name || !folderInput || !folderInput.files || folderInput.files.length === 0) {
+            showImportStatus('Vui lòng nhập tên bundle và chọn thư mục local.', 'rose');
             return;
         }
-        showImportStatus('Trên GitHub Pages, vui lòng sử dụng tab "Nạp File ZIP" để import bundle tri thức.', 'amber');
+
+        showImportStatus('<i class="fa-solid fa-circle-notch fa-spin"></i> Đang quét và chỉ mục thư mục local...', 'blue');
+
+        try {
+            const bundleId = 'bundle_' + Date.now();
+            const extractedFiles = {};
+
+            const fileArray = Array.from(folderInput.files);
+            const readPromises = fileArray.map(file => {
+                const relPath = file.webkitRelativePath || file.name;
+                if (relPath.endsWith('.md') || relPath.endsWith('.json') || relPath.endsWith('.txt')) {
+                    return file.text().then(text => {
+                        const cleanPath = relPath.includes('/') ? relPath.substring(relPath.indexOf('/') + 1) : relPath;
+                        extractedFiles[cleanPath] = text;
+                    });
+                }
+                return Promise.resolve();
+            });
+
+            await Promise.all(readPromises);
+
+            localBundles[bundleId] = {
+                id: bundleId,
+                name: name,
+                files: extractedFiles
+            };
+
+            localStorage.setItem('okf_custom_bundles', JSON.stringify(localBundles));
+            currentBundleId = bundleId;
+
+            showImportStatus(`Đã nạp thành công thư mục local với ${Object.keys(extractedFiles).length} tài liệu OKF!`, 'emerald');
+            setTimeout(() => {
+                importBundleModalEl.classList.add('hidden');
+                importStatusEl.classList.add('hidden');
+                loadBundlesList();
+            }, 1200);
+
+        } catch (err) {
+            showImportStatus(`Lỗi đọc thư mục: ${err.message}`, 'rose');
+        }
     });
 
     function showImportStatus(msg, color) {

@@ -211,19 +211,19 @@
                     </button>
                 </div>
 
-                <!-- TAB 2: REGISTER LOCAL PATH -->
+                <!-- TAB 2: REGISTER LOCAL FOLDER -->
                 <div class="tab-content hidden" id="tabPathContent">
                     <div class="form-group margin-top">
                         <label for="bundlePathName">Tên Gói Tri Thức (Bundle Name):</label>
                         <input type="text" id="bundlePathName" placeholder="Ví dụ: Core Banking OKF Bundle">
                     </div>
                     <div class="form-group margin-top">
-                        <label for="bundleLocalPath">Đường Dẫn Thư Mục Trên Máy (Local Path):</label>
-                        <input type="text" id="bundleLocalPath" placeholder="C:\projects\my-okf-bundle">
-                        <small class="help-text">Đường dẫn tuyệt đối hoặc tương đối tới thư mục gói OKF</small>
+                        <label for="bundleFolderInput">Chọn Thư Mục Local trên Máy:</label>
+                        <input type="file" id="bundleFolderInput" webkitdirectory directory multiple>
+                        <small class="help-text">Chọn thư mục chứa gói tri thức OKF từ máy tính của bạn (tự động đọc cấu trúc cây tri thức).</small>
                     </div>
                     <button class="btn btn-primary margin-top full-width" id="btnSubmitPath">
-                        <i class="fa-solid fa-folder-plus"></i> Đăng Ký Đường Dẫn
+                        <i class="fa-solid fa-folder-plus"></i> Nạp Thư Mục Local
                     </button>
                 </div>
 
