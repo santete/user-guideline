@@ -218,16 +218,17 @@
                         <input type="text" id="bundlePathName" placeholder="Ví dụ: Core Banking OKF Bundle">
                     </div>
                     <div class="form-group margin-top">
-                        <label for="bundleLocalPath">Đường Dẫn Thư Mục Trên Máy (Local Path):</label>
-                        <input type="text" id="bundleLocalPath" placeholder="C:\projects\my-okf-bundle">
-                        <small class="help-text">Nhập đường dẫn trực tiếp tới thư mục trên ổ cứng (vd: C:\projects\my-okf hoặc ./ga-okf).</small>
+                        <label for="bundleLocalPath">Đường Dẫn Ổ Cứng Máy Tính (Dành cho Local Server `http://localhost:3000`):</label>
+                        <input type="text" id="bundleLocalPath" placeholder="C:\Users\nangh\Documents\workplace\google-antigravity\knowledge-catalog\okf\ga-okf">
+                        <small class="help-text">Nhập đường dẫn tuyệt đối tới thư mục trên ổ cứng khi đang chạy ứng dụng ở Local Server.</small>
                     </div>
                     <div class="form-group margin-top">
-                        <label for="bundleFolderInput">Hoặc Chọn Thư Mục Bằng Cửa Sổ Trình Duyệt:</label>
+                        <label for="bundleFolderInput">Hoặc Chọn Thư Mục Bằng Trình Duyệt (Dành cho GitHub Pages):</label>
                         <input type="file" id="bundleFolderInput" webkitdirectory directory multiple>
+                        <small class="help-text">Lưu ý: Hộp thoại của Chrome ghi "Upload" nhưng dữ liệu CHỈ ĐỌC VÀO RAM TRÌNH DUYỆT CÁ NHÂN, hoàn toàn KHÔNG gửi lên server hay GitHub.</small>
                     </div>
                     <button class="btn btn-primary margin-top full-width" id="btnSubmitPath">
-                        <i class="fa-solid fa-folder-plus"></i> Đăng Ký Thư Mục Local
+                        <i class="fa-solid fa-folder-plus"></i> Nạp Thư Mục Local
                     </button>
                 </div>
 
