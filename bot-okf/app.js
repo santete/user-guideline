@@ -500,7 +500,6 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
 
     btnSubmitPath?.addEventListener('click', async () => {
         const name = document.getElementById('bundlePathName').value.trim();
-        const localPath = document.getElementById('bundleLocalPath')?.value.trim();
         const folderInput = document.getElementById('bundleFolderInput');
         
         if (!name) {
@@ -508,35 +507,7 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
             return;
         }
 
-        // Mode A: Direct Local Path String Registration (Node / FastAPI Backend Mode - Zero Upload)
-        if (localPath) {
-            showImportStatus('<i class="fa-solid fa-circle-notch fa-spin"></i> Đang kết nối đường dẫn ổ cứng...', 'blue');
-            try {
-                const res = await fetch('/api/bundles/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, path: localPath })
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.detail || data.error || 'Không thể mở thư mục local');
-
-                showImportStatus(data.message || 'Đã mở trực tiếp thư mục local thành công!', 'emerald');
-                setTimeout(() => {
-                    importBundleModalEl.classList.add('hidden');
-                    importStatusEl.classList.add('hidden');
-                    loadBundlesList();
-                }, 1200);
-                return;
-            } catch (err) {
-                console.warn('Direct path registration fallback to client picker...', err);
-                if (!folderInput || !folderInput.files || folderInput.files.length === 0) {
-                    showImportStatus(`Không thể mở đường dẫn '${localPath}'. Nếu chạy trang web tĩnh, vui lòng chọn thư mục qua ô phía dưới.`, 'rose');
-                    return;
-                }
-            }
-        }
-
-        // Mode B: Client Browser Directory Picker
+        // Mode B: Client Browser Directory Picker (Pure SPA)
         if (folderInput && folderInput.files && folderInput.files.length > 0) {
             showImportStatus('<i class="fa-solid fa-circle-notch fa-spin"></i> Đang chỉ mục thư mục local...', 'blue');
             try {
@@ -576,8 +547,8 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
             } catch (err) {
                 showImportStatus(`Lỗi đọc thư mục: ${err.message}`, 'rose');
             }
-        } else if (!localPath) {
-            showImportStatus('Vui lòng nhập đường dẫn thư mục hoặc chọn thư mục từ máy.', 'rose');
+        } else {
+            showImportStatus('Vui lòng chọn thư mục từ máy tính.', 'rose');
         }
     });
 
