@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OKF Intelligence Bot - ProjectNow AI Gateway</title>
+
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Markdown & Syntax Highlighting -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+
+    <!-- GitHub Markdown CSS & Mermaid Diagrams -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <!-- Application CSS -->
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- TOP HEADER NAVBAR -->
+        <header class="app-header">
+            <div class="logo-group">
+                <a href="../index.html" class="btn-back-home" title="Trở về Trang Hướng Dẫn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <div class="logo-badge">
+                    <i class="fa-solid fa-brain"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>OKF Intelligence Bot</h1>
+                    <span class="sub-text">ProjectNow OpenRouter Gateway</span>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <div class="status-indicator" id="apiKeyStatus" title="Trạng thái API Gateway">
+                    <span class="dot yellow"></span>
+                    <span class="status-label">Đang kiểm tra...</span>
+                </div>
+
+                <div class="model-select-wrapper">
+                    <i class="fa-solid fa-microchip select-icon"></i>
+                    <select id="modelSelect" class="model-dropdown">
+                        <option value="google/gemini-2.0-flash-lite-preview-02-05:free">Gemini 2.0 Flash Lite (Free)</option>
+                        <option value="nvidia/nemotron-3-super-120b-a12b:free">Nvidia Nemotron 3 Super 120B (Free)</option>
+                        <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B Instruct (Free)</option>
+                        <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</option>
+                        <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 Coder 32B (Free)</option>
+                        <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                        <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-secondary" id="btnSettings" title="Cấu hình API Key">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- MAIN LAYOUT (2 COLUMNS) -->
+        <div class="main-layout">
+            
+            <!-- LEFT SIDEBAR: OKF BUNDLE SELECTOR & KNOWLEDGE TREE -->
+            <aside class="sidebar" id="sidebar">
+                <!-- BUNDLE SELECTOR HEADER -->
+                <div class="bundle-selector-bar">
+                    <div class="bundle-label">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>Gói Tri Thức OKF Active</span>
+                    </div>
+                    <div class="bundle-select-box">
+                        <i class="fa-solid fa-database select-icon"></i>
+                        <select id="bundleSelect" class="bundle-dropdown" title="Chọn gói tri thức OKF"></select>
+                        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                    </div>
+                </div>
+
+                <div class="sidebar-header">
+                    <div class="sidebar-title">
+                        <i class="fa-solid fa-folder-tree"></i>
+                        <span>Cấu Trúc Thư Mục</span>
+                    </div>
+                    <button class="btn-icon" id="btnReloadTree" title="Tải lại cây tri thức">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="treeSearchInput" placeholder="Tìm kiếm file tri thức...">
+                </div>
+
+                <div class="tree-container" id="treeContainer">
+                    <div class="loading-state">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i>
+                        <span>Đang nạp cây thư mục OKF...</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-footer">
+                    <div class="stats-item">
+                        <i class="fa-solid fa-file-code"></i>
+                        <span id="docCountText">0 tài liệu OKF</span>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- RIGHT CHAT AREA -->
+            <main class="chat-area">
+                
+                <!-- CHAT TOOLBAR -->
+                <div class="chat-header">
+                    <div class="chat-info">
+                        <span class="active-context-tag">
+                            <i class="fa-solid fa-database"></i> Direct Gateway: <strong id="okfBundleName">ga-okf</strong>
+                        </span>
+                    </div>
+                    <div class="chat-actions">
+                        <button class="btn btn-outline-danger" id="btnClearChat">
+                            <i class="fa-solid fa-trash-can"></i> Xóa Chat
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CHAT MESSAGES FEED -->
+                <div class="chat-messages" id="chatMessages">
+                    <!-- WELCOME BANNER -->
+                    <div class="welcome-banner">
+                        <div class="banner-icon">
+                            <i class="fa-solid fa-comments"></i>
+                        </div>
+                        <h2>ProjectNow OpenRouter AI Gateway</h2>
+                        <p>Web Client kết nối trực tiếp ProjectNow Supabase Gateway từ GitHub Pages (`https://santete.github.io`).</p>
+                        
+                        <div class="quick-suggestions">
+                            <span class="suggestion-label">Gợi ý câu hỏi nhanh:</span>
+                            <div class="suggestion-pills">
+                                <button class="pill" data-query="Tóm tắt kiến trúc của gitlab-analytics từ bundle OKF">
+                                    <i class="fa-solid fa-sitemap"></i> Kiến trúc Gitlab-Analytics
+                                </button>
+                                <button class="pill" data-query="Các domain model và nguồn tài liệu chính trong OKF là gì?">
+                                    <i class="fa-solid fa-cubes"></i> Domain Models trong OKF
+                                </button>
+                                <button class="pill" data-query="Giải thích quy trình Governance trong bundle OKF này">
+                                    <i class="fa-solid fa-shield-halved"></i> Quy trình Governance
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CHAT INPUT CONTAINER -->
+                <div class="chat-input-wrapper">
+                    <div class="chat-input-box">
+                        <textarea id="chatInput" placeholder="Nhập câu hỏi về gói tri thức OKF... (Enter để gửi, Shift+Enter xuống dòng)" rows="1"></textarea>
+                        <button id="btnSend" class="btn-send" title="Gửi câu hỏi">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL VIEW FILE OKF -->
+    <div class="modal-overlay hidden" id="fileModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span id="modalFileName">Chi tiết tài liệu</span>
+                </div>
+                <div class="modal-header-actions">
+                    <a id="btnOpenNewTab" href="#" target="_blank" class="btn btn-secondary btn-sm" title="Mở file raw bằng Extension Trình Duyệt">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Extension Trình Duyệt
+                    </a>
+                    <button class="btn btn-secondary btn-sm" id="btnCopyMarkdown" title="Sao chép nội dung Markdown">
+                        <i class="fa-solid fa-copy"></i> Copy Raw
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="btnToggleRaw" title="Chuyển chế độ xem Raw Code / Rendered">
+                        <i class="fa-solid fa-code"></i> Raw Code
+                    </button>
+                    <button class="btn-icon" id="btnCloseModal">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body" id="modalFileContent">
+                <div class="loading-state">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    <span>Đang tải tài liệu...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SETTINGS (API KEYS) -->
+    <div class="modal-overlay hidden" id="settingsModal">
+        <div class="modal-card modal-sm">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Cấu hình Gateway</span>
+                </div>
+                <button class="btn-icon" id="btnCloseSettings">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="partnerKeyInput">ProjectNow Partner API Key (`pj_live_...`):</label>
+                    <input type="password" id="partnerKeyInput" placeholder="pj_live_89f0039b1111c8e0bfeb07cb87d9da7a">
+                    <small class="help-text">Partner Key được cấp bởi ProjectNow Gateway Admin.</small>
+                </div>
+                <div class="form-group margin-top">
+                    <label for="apiKeyInput">OpenRouter API Key (`sk-or-v1-...`):</label>
+                    <input type="password" id="apiKeyInput" placeholder="sk-or-v1-xxxxxxxxxxxx">
+                    <small class="help-text">OpenRouter Key cá nhân của bạn.</small>
+                </div>
+                <div class="form-group margin-top">
+                    <label for="gatewayUrlInput">ProjectNow Gateway Endpoint:</label>
+                    <input type="text" id="gatewayUrlInput" value="https://mygkmiofmbhnxzrvrqml.supabase.co/functions/v1/ai-gateway">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" id="btnSaveSettings">Lưu Cấu Hình</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application JS -->
+    <script src="./app.js"></script>
+</body>
+</html>

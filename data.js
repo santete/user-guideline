@@ -38,5 +38,13 @@ const guidesData = [
         description: "Tài liệu tiêu chuẩn về Logging, Metrics & Tracing giúp thiết lập hệ thống cảnh báo và gỡ lỗi nhanh chóng cho Microservices.",
         url: "https://santete.github.io/observability-standard/",
         tags: ["observability", "monitoring", "logging", "metrics"]
+    },
+    {
+        id: "bot-okf",
+        title: "Google OKF Intelligence Bot & Knowledge Gateway",
+        category: "Công cụ AI",
+        description: "Giao diện tương tác và truy vấn gói tri thức OKF (Open Knowledge Format) kết nối trực tiếp ProjectNow AI Gateway.",
+        url: "bot-okf/index.html",
+        tags: ["okf", "bot", "ai gateway", "openrouter", "knowledge format"]
     }
 ];
