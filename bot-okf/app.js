@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // State Variables
     let messageHistory = [];
     let isStreaming = false;
-    let currentBundleId = 'ga-okf';
+    let currentBundleId = '';
     let currentRawContent = '';
     let isRawMode = false;
 
@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiKeyInputEl = document.getElementById('apiKeyInput');
     const partnerKeyInputEl = document.getElementById('partnerKeyInput');
     const gatewayUrlInputEl = document.getElementById('gatewayUrlInput');
+    const useCloudGatewayInputEl = document.getElementById('useCloudGatewayInput');
     const btnSaveSettingsEl = document.getElementById('btnSaveSettings');
 
     // Bundle Manager Elements
@@ -77,24 +78,34 @@ document.addEventListener('DOMContentLoaded', () => {
     if (partnerKeyInputEl) partnerKeyInputEl.value = localStorage.getItem('projectnow_partner_key') || DEFAULT_PARTNER_KEY;
     if (apiKeyInputEl) apiKeyInputEl.value = localStorage.getItem('openrouter_api_key') || DEFAULT_OPENROUTER_KEY;
     if (gatewayUrlInputEl) gatewayUrlInputEl.value = localStorage.getItem('projectnow_gateway_url') || DEFAULT_GATEWAY_URL;
+    if (useCloudGatewayInputEl) useCloudGatewayInputEl.checked = localStorage.getItem('use_cloud_gateway') === 'true';
 
     // 1. HEALTH CHECK & STATUS
     function checkHealth() {
         const partnerKey = localStorage.getItem('projectnow_partner_key') || DEFAULT_PARTNER_KEY;
         const openrouterKey = localStorage.getItem('openrouter_api_key') || DEFAULT_OPENROUTER_KEY;
         
-        if (partnerKey && openrouterKey) {
-            apiKeyStatusEl.querySelector('.dot').className = 'dot green';
-            apiKeyStatusEl.querySelector('.status-label').textContent = 'ProjectNow Gateway Live';
+        if (isLocalMode) {
+            if (openrouterKey) {
+                apiKeyStatusEl.querySelector('.dot').className = 'dot green';
+                apiKeyStatusEl.querySelector('.status-label').textContent = 'Local Gateway (OpenRouter)';
+            } else {
+                apiKeyStatusEl.querySelector('.dot').className = 'dot yellow';
+                apiKeyStatusEl.querySelector('.status-label').textContent = 'Chưa nhập OpenRouter Key';
+            }
         } else {
-            apiKeyStatusEl.querySelector('.dot').className = 'dot yellow';
-            apiKeyStatusEl.querySelector('.status-label').textContent = 'Chưa nhập OpenRouter Key';
+            if (partnerKey && openrouterKey) {
+                apiKeyStatusEl.querySelector('.dot').className = 'dot green';
+                apiKeyStatusEl.querySelector('.status-label').textContent = 'ProjectNow Gateway Live';
+            } else {
+                apiKeyStatusEl.querySelector('.dot').className = 'dot yellow';
+                apiKeyStatusEl.querySelector('.status-label').textContent = 'Thiếu cấu hình API Keys';
+            }
         }
     }
 
     // 1.5. INITIALIZE MODE (DUAL-MODE DETECTION)
     async function initializeMode() {
-        checkHealth();
         try {
             const res = await fetch('/api/bundles');
             if (res.ok) {
@@ -106,10 +117,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 data.bundles.forEach(b => {
                     backendBundles[b.bundle_id] = b;
                 });
+                
+                if (data.active_bundle_id && backendBundles[data.active_bundle_id]) {
+                    currentBundleId = data.active_bundle_id;
+                }
             }
         } catch (e) {
             isLocalMode = false;
         }
+        checkHealth();
         loadBundlesList();
     }
 
@@ -363,7 +379,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fileKeys.forEach(filePath => {
             const lowerPath = filePath.toLowerCase();
             if (lowerPath.includes('index.md') || lowerPath.endsWith('readme.md')) {
-                const content = bundle.files[filePath];
+                let content = bundle.files[filePath];
+                if (content.length > 20000) content = content.substring(0, 20000) + '\n... [BỊ CẮT BỚT]';
                 selectedDocs.push({ path: filePath, content: content, score: 100 });
                 totalLength += content.length;
             }
@@ -386,7 +403,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (score > 0) {
-                scoredDocs.push({ path: filePath, content: content, score: score });
+                let limitedContent = content;
+                if (limitedContent.length > 15000) limitedContent = limitedContent.substring(0, 15000) + '\n... [BỊ CẮT BỚT]';
+                scoredDocs.push({ path: filePath, content: limitedContent, score: score });
             }
         });
 
@@ -402,7 +421,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedDocs.length < fileKeys.length && totalLength < MAX_CONTEXT_BYTES) {
             for (const filePath of fileKeys) {
                 if (selectedDocs.some(d => d.path === filePath)) continue;
-                const content = bundle.files[filePath];
+                let content = bundle.files[filePath];
+                if (content.length > 10000) content = content.substring(0, 10000) + '\n... [BỊ CẮT BỚT]';
                 if (totalLength + content.length > MAX_CONTEXT_BYTES) break;
                 selectedDocs.push({ path: filePath, content: content, score: 1 });
                 totalLength += content.length;
@@ -497,6 +517,13 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${partnerKey}`
         };
+        
+        const useCloudGateway = localStorage.getItem('use_cloud_gateway') === 'true';
+        if (isLocalMode && useCloudGateway) {
+            reqHeaders['x-use-cloud-gateway'] = 'true';
+            reqHeaders['x-partner-key'] = partnerKey;
+            reqHeaders['x-gateway-url'] = gatewayUrl;
+        }
 
         const requestBody = {
             model: selectedModel,
@@ -508,6 +535,7 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
         if (openrouterKey) {
             requestBody.openrouter_api_key = openrouterKey;
             requestBody.api_key = openrouterKey;
+            reqHeaders['x-openrouter-api-key'] = openrouterKey;
         }
 
         try {
@@ -522,7 +550,16 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
 
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.error || errData.message || errData.detail || `Lỗi HTTP ${response.status}`);
+                let errText = `Lỗi HTTP ${response.status}`;
+                if (errData.error) {
+                    if (typeof errData.error === 'string') errText = errData.error;
+                    else if (errData.error.message) errText = errData.error.message;
+                } else if (errData.message) {
+                    errText = errData.message;
+                } else if (errData.detail) {
+                    errText = errData.detail;
+                }
+                throw new Error(errText);
             }
 
             const reader = response.body.getReader();
@@ -839,6 +876,7 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
         const partnerKey = partnerKeyInputEl ? partnerKeyInputEl.value.trim() : '';
         const openrouterKey = apiKeyInputEl ? apiKeyInputEl.value.trim() : '';
         const gatewayUrl = gatewayUrlInputEl ? gatewayUrlInputEl.value.trim() : '';
+        const useCloud = useCloudGatewayInputEl ? useCloudGatewayInputEl.checked : false;
 
         if (partnerKey) localStorage.setItem('projectnow_partner_key', partnerKey);
         else localStorage.removeItem('projectnow_partner_key');
@@ -848,6 +886,8 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
 
         if (gatewayUrl) localStorage.setItem('projectnow_gateway_url', gatewayUrl);
         else localStorage.removeItem('projectnow_gateway_url');
+        
+        localStorage.setItem('use_cloud_gateway', useCloud ? 'true' : 'false');
 
         settingsModalEl.classList.add('hidden');
         checkHealth();

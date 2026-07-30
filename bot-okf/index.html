@@ -51,11 +51,10 @@
                 <div class="model-select-wrapper">
                     <i class="fa-solid fa-microchip select-icon"></i>
                     <select id="modelSelect" class="model-dropdown">
-                        <option value="nvidia/nemotron-3-super-120b-a12b:free">Nvidia Nemotron 3 Super 120B (Free)</option>
-                        <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B Instruct (Free)</option>
-                        <option value="google/gemini-2.0-flash-lite-preview-02-05:free">Gemini 2.0 Flash Lite (Free)</option>
-                        <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</option>
-                        <option value="qwen/qwen-2.5-coder-32b-instruct:free">Qwen 2.5 Coder 32B (Free)</option>
+                        <option value="nvidia/nemotron-3-ultra-550b-a55b:free">Nvidia Nemotron 3 Ultra 550B (Free)</option>
+                        <option value="poolside/laguna-s-2.1:free">Poolside Laguna S 2.1 (Free)</option>
+                        <option value="google/gemma-4-31b-it:free">Google Gemma 4 31B IT (Free)</option>
+                        <option value="openrouter/free">OpenRouter Auto (Free)</option>
                         <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet</option>
                         <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
                     </select>
@@ -306,10 +305,17 @@
                     <input type="password" id="apiKeyInput" placeholder="sk-or-v1-xxxxxxxxxxxx">
                     <small class="help-text">OpenRouter Key quản lý mô hình AI của bạn.</small>
                 </div>
-                <div class="form-group margin-top">
-                    <label for="gatewayUrlInput">ProjectNow Gateway Endpoint:</label>
-                    <input type="text" id="gatewayUrlInput" value="https://mygkmiofmbhnxzrvrqml.supabase.co/functions/v1/ai-gateway">
+                <div class="setting-group">
+                    <label for="gatewayUrlInput">ProjectNow Gateway URL</label>
+                    <input type="text" id="gatewayUrlInput" placeholder="https://mygkmiofmbhnxzrvrqml.supabase.co/functions/v1/ai-gateway">
                 </div>
+                <div class="setting-group checkbox-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                    <input type="checkbox" id="useCloudGatewayInput" style="width: 16px; height: 16px;">
+                    <label for="useCloudGatewayInput" style="margin-bottom: 0; cursor: pointer;">Sử dụng Cloud Gateway để vượt tường lửa công ty (Dành cho Local Mode)</label>
+                </div>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 10px;">
+                    Lưu ý: Mọi cấu hình đều được lưu an toàn tại Local Storage của trình duyệt bạn.
+                </p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" id="btnSaveSettings">Lưu Cấu Hình</button>
