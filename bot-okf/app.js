@@ -107,7 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1.5. INITIALIZE MODE (DUAL-MODE DETECTION)
     async function initializeMode() {
         try {
-            const res = await fetch('/api/bundles');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            const res = await fetch('/api/bundles', { signal: controller.signal });
+            clearTimeout(timeoutId);
             if (res.ok) {
                 const data = await res.json();
                 isLocalMode = true;
