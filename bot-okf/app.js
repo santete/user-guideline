@@ -592,17 +592,22 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
             reqHeaders['x-gateway-url'] = gatewayUrl;
         }
 
+        if (isLocalMode && !useCloudGateway) {
+            reqHeaders['Authorization'] = `Bearer ${openrouterKey}`;
+        }
+
         const requestBody = {
             model: selectedModel,
             messages: payloadMessages,
             temperature: 0.3,
-            stream: true
+            stream: true,
+            openrouter_api_key: openrouterKey,
+            api_key: openrouterKey
         };
 
         if (openrouterKey) {
             requestBody.openrouter_api_key = openrouterKey;
             requestBody.api_key = openrouterKey;
-            reqHeaders['x-openrouter-api-key'] = openrouterKey;
         }
 
         try {
