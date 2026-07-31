@@ -6,10 +6,60 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentRawContent = '';
     let isRawMode = false;
 
-    // Custom In-Memory & LocalStorage Bundles Store
-    let localBundles = JSON.parse(localStorage.getItem('okf_custom_bundles') || '{}');
+    // Custom In-Memory Bundles Store (persisted via IndexedDB)
+    let localBundles = {};
     let backendBundles = {}; // For Local Server Mode
     let isLocalMode = false;
+
+    // --- IndexedDB Storage Engine (replaces localStorage to avoid 5MB quota) ---
+    const OKF_DB_NAME = 'okf_intelligence_db';
+    const OKF_STORE = 'bundles';
+
+    function openOKFDB() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open(OKF_DB_NAME, 1);
+            req.onupgradeneeded = (e) => e.target.result.createObjectStore(OKF_STORE);
+            req.onsuccess = (e) => resolve(e.target.result);
+            req.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function saveBundle(bundleId, bundleData) {
+        const db = await openOKFDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(OKF_STORE, 'readwrite');
+            tx.objectStore(OKF_STORE).put(bundleData, bundleId);
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function loadAllBundles() {
+        const db = await openOKFDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(OKF_STORE, 'readonly');
+            const store = tx.objectStore(OKF_STORE);
+            const result = {};
+            const cursor = store.openCursor();
+            cursor.onsuccess = (e) => {
+                const c = e.target.result;
+                if (c) { result[c.key] = c.value; c.continue(); }
+                else resolve(result);
+            };
+            cursor.onerror = (e) => reject(e.target.error);
+        });
+    }
+
+    async function deleteBundle(bundleId) {
+        const db = await openOKFDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(OKF_STORE, 'readwrite');
+            tx.objectStore(OKF_STORE).delete(bundleId);
+            tx.oncomplete = () => resolve();
+            tx.onerror = (e) => reject(e.target.error);
+        });
+    }
+    // --- End IndexedDB Engine ---
 
     // DOM Elements
     const apiKeyStatusEl = document.getElementById('apiKeyStatus');
@@ -132,6 +182,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (localModeUIEl) localModeUIEl.classList.add('hidden');
             const spaModeUIEl = document.getElementById('spaModeUI');
             if (spaModeUIEl) spaModeUIEl.classList.remove('hidden');
+        }
+        // Load persisted bundles from IndexedDB (replaces old localStorage)
+        try {
+            localBundles = await loadAllBundles();
+            // Migrate: clear old localStorage data if it exists
+            localStorage.removeItem('okf_custom_bundles');
+        } catch (dbErr) {
+            console.warn('IndexedDB load failed, using empty bundles:', dbErr);
+            localBundles = {};
         }
         checkHealth();
         loadBundlesList();
@@ -724,7 +783,7 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
                 files: extractedFiles
             };
 
-            localStorage.setItem('okf_custom_bundles', JSON.stringify(localBundles));
+            await saveBundle(bundleId, localBundles[bundleId]);
             currentBundleId = bundleId;
 
             showImportStatus(`Đã nạp thành công ${Object.keys(extractedFiles).length} tài liệu OKF!`, 'emerald');
@@ -811,7 +870,7 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
                     files: extractedFiles
                 };
 
-                localStorage.setItem('okf_custom_bundles', JSON.stringify(localBundles));
+                await saveBundle(bundleId, localBundles[bundleId]);
                 currentBundleId = bundleId;
 
                 showImportStatus(`Đã nạp thành công thư mục local với ${Object.keys(extractedFiles).length} tài liệu OKF!`, 'emerald');
