@@ -112,6 +112,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
                 isLocalMode = true;
                 if (localModeUIEl) localModeUIEl.classList.remove('hidden');
+                const spaModeUIEl = document.getElementById('spaModeUI');
+                if (spaModeUIEl) spaModeUIEl.classList.add('hidden');
                 
                 backendBundles = {};
                 data.bundles.forEach(b => {
@@ -124,6 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             isLocalMode = false;
+            if (localModeUIEl) localModeUIEl.classList.add('hidden');
+            const spaModeUIEl = document.getElementById('spaModeUI');
+            if (spaModeUIEl) spaModeUIEl.classList.remove('hidden');
         }
         checkHealth();
         loadBundlesList();
@@ -766,6 +771,13 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
         
         if (!name) {
             showImportStatus('Vui lòng nhập tên gói tri thức OKF.', 'rose');
+            return;
+        }
+
+        const localPath = document.getElementById('bundleLocalPath')?.value.trim();
+        if (isLocalMode && localPath && (!folderInput.files || folderInput.files.length === 0)) {
+            // Fallback for UX: if user fills local path but clicks the wrong big blue button
+            btnSubmitLocalPath?.click();
             return;
         }
 
