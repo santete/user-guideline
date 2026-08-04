@@ -972,6 +972,395 @@ QUY TẮC PHẢN HỒI QUAN TRỌNG:
         checkHealth();
     });
 
+    // ==========================================================================
+    // KNOWLEDGE GRAPH VISUALIZATION MODULE (VIS.JS)
+    // ==========================================================================
+    const btnGraphViewEl = document.getElementById('btnGraphView');
+    const graphModalEl = document.getElementById('graphModal');
+    const btnCloseGraphEl = document.getElementById('btnCloseGraph');
+    const graphBundleBadgeEl = document.getElementById('graphBundleBadge');
+    const graphCanvasEl = document.getElementById('graphCanvas');
+    
+    const graphSearchInputEl = document.getElementById('graphSearchInput');
+    const graphFilterSelectEl = document.getElementById('graphFilterSelect');
+    const btnGraphResetEl = document.getElementById('btnGraphReset');
+    const btnGraphPhysicsEl = document.getElementById('btnGraphPhysics');
+    const physicsStatusTextEl = document.getElementById('physicsStatusText');
+
+    const graphNodeDetailsEl = document.getElementById('graphNodeDetails');
+    const drawerNodeTitleEl = document.getElementById('drawerNodeTitle');
+    const drawerNodeMetaEl = document.getElementById('drawerNodeMeta');
+    const btnDrawerOpenFileEl = document.getElementById('btnDrawerOpenFile');
+    const drawerOutgoingLinksEl = document.getElementById('drawerOutgoingLinks');
+    const drawerIncomingLinksEl = document.getElementById('drawerIncomingLinks');
+    const btnCloseDrawerEl = document.getElementById('btnCloseDrawer');
+
+    let networkInstance = null;
+    let nodesDataSet = null;
+    let edgesDataSet = null;
+    let rawGraphData = { nodes: [], edges: [] };
+    let isPhysicsEnabled = true;
+    let selectedGraphFilePath = null;
+
+    btnGraphViewEl?.addEventListener('click', () => {
+        if (!currentBundleId) {
+            alert('Vui lòng chọn một gói tri thức OKF trước!');
+            return;
+        }
+        graphModalEl.classList.remove('hidden');
+        loadAndRenderKnowledgeGraph(currentBundleId);
+    });
+
+    btnCloseGraphEl?.addEventListener('click', () => {
+        graphModalEl.classList.add('hidden');
+    });
+
+    btnCloseDrawerEl?.addEventListener('click', () => {
+        graphNodeDetailsEl.classList.add('hidden');
+    });
+
+    btnGraphResetEl?.addEventListener('click', () => {
+        if (networkInstance) {
+            networkInstance.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+        }
+    });
+
+    btnGraphPhysicsEl?.addEventListener('click', () => {
+        isPhysicsEnabled = !isPhysicsEnabled;
+        if (networkInstance) {
+            networkInstance.setOptions({ physics: { enabled: isPhysicsEnabled } });
+        }
+        if (physicsStatusTextEl) {
+            physicsStatusTextEl.textContent = isPhysicsEnabled ? 'Free Physics' : 'Locked Layout';
+        }
+        btnGraphPhysicsEl.classList.toggle('active', !isPhysicsEnabled);
+    });
+
+    graphFilterSelectEl?.addEventListener('change', () => {
+        applyGraphFilters();
+    });
+
+    graphSearchInputEl?.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.trim().toLowerCase();
+        if (!networkInstance || !nodesDataSet) return;
+
+        if (!searchTerm) {
+            networkInstance.fit();
+            return;
+        }
+
+        const matches = rawGraphData.nodes.filter(n => 
+            n.label.toLowerCase().includes(searchTerm) || 
+            (n.path && n.path.toLowerCase().includes(searchTerm))
+        );
+
+        if (matches.length > 0) {
+            networkInstance.selectNodes(matches.map(m => m.id));
+            networkInstance.focus(matches[0].id, {
+                scale: 1.2,
+                animation: { duration: 400, easingFunction: 'easeInOutQuad' }
+            });
+        }
+    });
+
+    btnDrawerOpenFileEl?.addEventListener('click', () => {
+        if (selectedGraphFilePath) {
+            graphModalEl.classList.add('hidden');
+            openFilePreview(selectedGraphFilePath);
+        }
+    });
+
+    async function loadAndRenderKnowledgeGraph(bundleId) {
+        if (graphBundleBadgeEl) {
+            const bName = (backendBundles[bundleId] && backendBundles[bundleId].name) || 
+                          (localBundles[bundleId] && localBundles[bundleId].name) || 
+                          bundleId;
+            graphBundleBadgeEl.textContent = bName;
+        }
+
+        graphNodeDetailsEl.classList.add('hidden');
+
+        try {
+            if (isLocalMode && backendBundles[bundleId]) {
+                const res = await fetch(`/api/okf/graph?bundle_id=${encodeURIComponent(bundleId)}`);
+                if (res.ok) {
+                    rawGraphData = await res.json();
+                } else {
+                    rawGraphData = buildClientSideGraphData(bundleId);
+                }
+            } else {
+                rawGraphData = buildClientSideGraphData(bundleId);
+            }
+            renderVisGraph(rawGraphData);
+        } catch (e) {
+            console.error('Error building knowledge graph:', e);
+            rawGraphData = buildClientSideGraphData(bundleId);
+            renderVisGraph(rawGraphData);
+        }
+    }
+
+    function buildClientSideGraphData(bundleId) {
+        const bundle = localBundles[bundleId];
+        const nodesMap = new Map();
+        const edgesMap = new Map();
+
+        if (!bundle || !bundle.files) {
+            return { nodes: [], edges: [] };
+        }
+
+        const fileKeys = Object.keys(bundle.files).filter(k => k.endsWith('.md'));
+
+        function addNode(id, label, type, pathStr) {
+            if (!nodesMap.has(id)) {
+                nodesMap.set(id, { id, label, type, path: pathStr || id });
+            }
+        }
+
+        function addEdge(source, target, label, type) {
+            if (!source || !target || source === target) return;
+            const edgeId = `${source}->${target}:${type}`;
+            if (!edgesMap.has(edgeId)) {
+                edgesMap.set(edgeId, { from: source, to: target, label: label || '', type });
+            }
+        }
+
+        fileKeys.forEach(filePath => {
+            const parts = filePath.split('/');
+            const fileName = parts[parts.length - 1].replace(/\.md$/i, '');
+            addNode(filePath, fileName, 'file', filePath);
+
+            if (parts.length > 1) {
+                let currentDir = '';
+                for (let i = 0; i < parts.length - 1; i++) {
+                    const dirName = parts[i];
+                    const parentDir = currentDir;
+                    currentDir = currentDir ? `${currentDir}/${dirName}` : dirName;
+                    const folderId = 'dir:' + currentDir;
+                    addNode(folderId, dirName, 'folder', currentDir);
+
+                    if (parentDir) {
+                        addEdge('dir:' + parentDir, folderId, 'contains', 'structure');
+                    }
+                }
+                addEdge('dir:' + currentDir, filePath, 'contains', 'structure');
+            }
+
+            const content = bundle.files[filePath] || '';
+
+            // 1. Wikilinks [[target]]
+            const wikilinkRegex = /\[\[([^\]\|]+)(?:\|[^\]]+)?\]\]/g;
+            let match;
+            while ((match = wikilinkRegex.exec(content)) !== null) {
+                let target = match[1].trim();
+                if (!target.endsWith('.md')) target += '.md';
+                const found = fileKeys.find(k => k.toLowerCase() === target.toLowerCase() || k.toLowerCase().endsWith('/' + target.toLowerCase()));
+                if (found) {
+                    addEdge(filePath, found, 'references', 'link');
+                }
+            }
+
+            // 2. Standard markdown links [text](path.md)
+            const mdLinkRegex = /\[([^\]]+)\]\(([^)]+\.md)(?:#[^)]*)?\)/g;
+            while ((match = mdLinkRegex.exec(content)) !== null) {
+                let linkPath = match[2].trim();
+                const found = fileKeys.find(k => k.toLowerCase().endsWith('/' + linkPath.toLowerCase()) || k.toLowerCase() === linkPath.toLowerCase());
+                if (found) {
+                    addEdge(filePath, found, 'links to', 'link');
+                }
+            }
+
+            // 3. Hash tags #tag
+            const tagRegex = /(?:^|\s)#([a-zA-Z0-9_\-\/]+)/g;
+            while ((match = tagRegex.exec(content)) !== null) {
+                const tag = match[1].toLowerCase();
+                if (tag.length > 1 && !tag.match(/^\d+$/)) {
+                    const tagId = 'tag:' + tag;
+                    addNode(tagId, '#' + tag, 'tag', tag);
+                    addEdge(filePath, tagId, 'tagged', 'tag');
+                }
+            }
+        });
+
+        return {
+            nodes: Array.from(nodesMap.values()),
+            edges: Array.from(edgesMap.values())
+        };
+    }
+
+    function renderVisGraph(data) {
+        if (!window.vis) {
+            console.error('Vis.js library is not loaded');
+            return;
+        }
+
+        const visNodes = data.nodes.map(n => {
+            let color = { background: '#3b82f6', border: '#60a5fa', highlight: { background: '#60a5fa', border: '#93c5fd' } };
+            let shape = 'dot';
+            let size = 16;
+            let font = { color: '#f3f4f6', size: 12, face: 'Inter' };
+
+            if (n.type === 'folder') {
+                color = { background: '#f59e0b', border: '#fbbf24', highlight: { background: '#fbbf24', border: '#fde047' } };
+                shape = 'diamond';
+                size = 20;
+            } else if (n.type === 'tag') {
+                color = { background: '#10b981', border: '#34d399', highlight: { background: '#34d399', border: '#6ee7b7' } };
+                shape = 'triangle';
+                size = 14;
+            }
+
+            return {
+                id: n.id,
+                label: n.label,
+                title: `${n.type.toUpperCase()}: ${n.path}`,
+                shape: shape,
+                size: size,
+                color: color,
+                font: font,
+                nodeType: n.type,
+                nodePath: n.path
+            };
+        });
+
+        const visEdges = data.edges.map(e => {
+            let color = '#334155';
+            let dashes = false;
+
+            if (e.type === 'link') {
+                color = '#3b82f6';
+            } else if (e.type === 'tag') {
+                color = '#10b981';
+                dashes = true;
+            }
+
+            return {
+                from: e.from,
+                to: e.to,
+                label: e.label || '',
+                color: { color: color, highlight: '#60a5fa', opacity: 0.7 },
+                arrows: { to: { enabled: true, scaleFactor: 0.5 } },
+                dashes: dashes
+            };
+        });
+
+        nodesDataSet = new vis.DataSet(visNodes);
+        edgesDataSet = new vis.DataSet(visEdges);
+
+        const container = graphCanvasEl;
+        const graphConfig = {
+            nodes: {
+                borderWidth: 2,
+                shadow: true
+            },
+            edges: {
+                width: 1.5,
+                smooth: { type: 'continuous' }
+            },
+            physics: {
+                enabled: isPhysicsEnabled,
+                solver: 'barnesHut',
+                barnesHut: {
+                    gravitationalConstant: -3000,
+                    centralGravity: 0.3,
+                    springLength: 95,
+                    springConstant: 0.04,
+                    damping: 0.09
+                }
+            },
+            interaction: {
+                hover: true,
+                tooltipDelay: 100,
+                hideEdgesOnDrag: true,
+                navigationButtons: false
+            }
+        };
+
+        if (networkInstance) {
+            networkInstance.destroy();
+        }
+
+        networkInstance = new vis.Network(container, { nodes: nodesDataSet, edges: edgesDataSet }, graphConfig);
+
+        networkInstance.on('selectNode', (params) => {
+            if (params.nodes.length > 0) {
+                const nodeId = params.nodes[0];
+                showGraphNodeDetails(nodeId);
+            }
+        });
+
+        networkInstance.on('deselectNode', () => {
+            graphNodeDetailsEl.classList.add('hidden');
+        });
+    }
+
+    function applyGraphFilters() {
+        if (!nodesDataSet || !rawGraphData) return;
+        const filterType = graphFilterSelectEl ? graphFilterSelectEl.value : 'all';
+
+        const filteredNodes = rawGraphData.nodes.filter(n => filterType === 'all' || n.type === filterType);
+        const activeIds = new Set(filteredNodes.map(n => n.id));
+
+        nodesDataSet.clear();
+        edgesDataSet.clear();
+
+        renderVisGraph({
+            nodes: filteredNodes,
+            edges: rawGraphData.edges.filter(e => activeIds.has(e.from) && activeIds.has(e.to))
+        });
+    }
+
+    function showGraphNodeDetails(nodeId) {
+        const node = rawGraphData.nodes.find(n => n.id === nodeId);
+        if (!node) return;
+
+        graphNodeDetailsEl.classList.remove('hidden');
+        drawerNodeTitleEl.textContent = node.label;
+        drawerNodeMetaEl.textContent = `Type: ${node.type.toUpperCase()} | Path: ${node.path}`;
+
+        if (node.type === 'file') {
+            btnDrawerOpenFileEl.classList.remove('hidden');
+            selectedGraphFilePath = node.path;
+        } else {
+            btnDrawerOpenFileEl.classList.add('hidden');
+            selectedGraphFilePath = null;
+        }
+
+        const outgoing = rawGraphData.edges.filter(e => e.from === nodeId);
+        const incoming = rawGraphData.edges.filter(e => e.to === nodeId);
+
+        drawerOutgoingLinksEl.innerHTML = outgoing.length === 0 
+            ? '<li style="color: var(--text-dim); font-size: 11px;">Không có liên kết đi</li>'
+            : outgoing.map(e => {
+                const targetNode = rawGraphData.nodes.find(n => n.id === e.to);
+                return `<li class="drawer-link-item" data-node-id="${e.to}">${e.label ? '[' + e.label + '] ' : ''}${targetNode ? targetNode.label : e.to}</li>`;
+            }).join('');
+
+        drawerIncomingLinksEl.innerHTML = incoming.length === 0 
+            ? '<li style="color: var(--text-dim); font-size: 11px;">Không có liên kết đến</li>'
+            : incoming.map(e => {
+                const sourceNode = rawGraphData.nodes.find(n => n.id === e.from);
+                return `<li class="drawer-link-item" data-node-id="${e.from}">${e.label ? '[' + e.label + '] ' : ''}${sourceNode ? sourceNode.label : e.from}</li>`;
+            }).join('');
+
+        drawerOutgoingLinksEl.querySelectorAll('.drawer-link-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const targetId = item.getAttribute('data-node-id');
+                networkInstance.selectNodes([targetId]);
+                networkInstance.focus(targetId, { scale: 1.2, animation: { duration: 400 } });
+                showGraphNodeDetails(targetId);
+            });
+        });
+
+        drawerIncomingLinksEl.querySelectorAll('.drawer-link-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const targetId = item.getAttribute('data-node-id');
+                networkInstance.selectNodes([targetId]);
+                networkInstance.focus(targetId, { scale: 1.2, animation: { duration: 400 } });
+                showGraphNodeDetails(targetId);
+            });
+        });
+    }
+
     // Startup Initializations
     initializeMode();
 });

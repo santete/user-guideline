@@ -16,10 +16,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 
-    <!-- GitHub Markdown CSS & Mermaid Diagrams & JSZip -->
+    <!-- GitHub Markdown CSS & Mermaid Diagrams & JSZip & Vis.js Network -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-dark.min.css">
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/standalone/umd/vis-network.min.js"></script>
 
     <!-- Application CSS -->
     <link rel="stylesheet" href="./style.css">
@@ -59,6 +60,10 @@
                         <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
                     </select>
                 </div>
+
+                <button class="btn btn-secondary" id="btnGraphView" title="Xem sơ đồ mạng lưới tri thức OKF (Knowledge Graph)">
+                    <i class="fa-solid fa-diagram-project"></i> Graph View
+                </button>
 
                 <button class="btn btn-primary" id="btnHeaderImport" title="Import Gói Tri Thức Mới (ZIP / Path)">
                     <i class="fa-solid fa-cloud-arrow-up"></i> Import OKF Bundle
@@ -321,6 +326,80 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" id="btnSaveSettings">Lưu Cấu Hình</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- KNOWLEDGE GRAPH MODAL -->
+    <div class="modal-overlay hidden" id="graphModal">
+        <div class="modal-card modal-fullscreen">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-diagram-project text-blue"></i>
+                    <span>OKF Knowledge Graph Network</span>
+                    <span class="badge" id="graphBundleBadge">Active Bundle</span>
+                </div>
+
+                <div class="graph-toolbar">
+                    <div class="graph-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="graphSearchInput" placeholder="Tìm tên file, tag (#)...">
+                    </div>
+                    
+                    <select id="graphFilterSelect" class="graph-select">
+                        <option value="all">Tất cả Nút (Files, Folders, Tags)</option>
+                        <option value="file">Chỉ File Markdown</option>
+                        <option value="folder">Chỉ Thư mục</option>
+                        <option value="tag">Chỉ Thẻ (#Tags)</option>
+                    </select>
+
+                    <button class="btn btn-secondary btn-sm" id="btnGraphReset" title="Đặt lại góc nhìn (Reset Camera)">
+                        <i class="fa-solid fa-expand"></i> Reset View
+                    </button>
+                    
+                    <button class="btn btn-secondary btn-sm" id="btnGraphPhysics" title="Bật/Tắt vật lý tự do">
+                        <i class="fa-solid fa-atom"></i> <span id="physicsStatusText">Free Physics</span>
+                    </button>
+                </div>
+
+                <button class="btn-icon" id="btnCloseGraph">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="modal-body graph-modal-body">
+                <div id="graphCanvas" class="graph-canvas"></div>
+
+                <!-- RIGHT DRAWER: NODE DETAILS -->
+                <div class="graph-details-drawer hidden" id="graphNodeDetails">
+                    <div class="drawer-header">
+                        <div class="drawer-title" id="drawerNodeTitle">Detail</div>
+                        <button class="btn-icon btn-sm" id="btnCloseDrawer"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="drawer-body">
+                        <div class="drawer-meta" id="drawerNodeMeta"></div>
+                        <div class="drawer-actions">
+                            <button class="btn btn-primary btn-sm btn-block" id="btnDrawerOpenFile">
+                                <i class="fa-solid fa-book-open"></i> Xem Nội Dung File
+                            </button>
+                        </div>
+                        <div class="drawer-section">
+                            <h4><i class="fa-solid fa-link"></i> Liên Kết Đến (Outgoing)</h4>
+                            <ul id="drawerOutgoingLinks" class="drawer-link-list"></ul>
+                        </div>
+                        <div class="drawer-section">
+                            <h4><i class="fa-solid fa-route"></i> Được Liên Kết Bởi (Incoming)</h4>
+                            <ul id="drawerIncomingLinks" class="drawer-link-list"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GRAPH LEGEND -->
+                <div class="graph-legend">
+                    <span class="legend-item"><span class="dot dot-file"></span> File Markdown</span>
+                    <span class="legend-item"><span class="dot dot-folder"></span> Thư Mục</span>
+                    <span class="legend-item"><span class="dot dot-tag"></span> Thẻ Tag (#)</span>
+                </div>
             </div>
         </div>
     </div>

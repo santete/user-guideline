@@ -250,6 +250,141 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
+    // 3.5. OKF KNOWLEDGE GRAPH API
+    if (pathname === '/api/okf/graph' && req.method === 'GET') {
+        const targetId = parsedUrl.query.bundle_id || activeBundleId;
+        const targetBundle = bundles[targetId] || bundles['ga-okf'];
+
+        if (!targetBundle || !fs.existsSync(targetBundle.path)) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Bundle not found' }));
+            return;
+        }
+
+        const nodesMap = new Map();
+        const edgesMap = new Map();
+
+        function addNode(id, label, type, pathStr, extra = {}) {
+            if (!nodesMap.has(id)) {
+                nodesMap.set(id, { id, label, type, path: pathStr || id, ...extra });
+            }
+        }
+
+        function addEdge(source, target, label, type) {
+            if (!source || !target || source === target) return;
+            const edgeId = `${source}->${target}:${type}`;
+            if (!edgesMap.has(edgeId)) {
+                edgesMap.set(edgeId, { from: source, to: target, label: label || '', type });
+            }
+        }
+
+        // Recursively collect files & folders
+        const fileMap = new Map(); // relPath -> fullPath
+
+        function scanForGraph(dir) {
+            const entries = fs.readdirSync(dir);
+            const relDir = path.relative(targetBundle.path, dir).replace(/\\/g, '/');
+            
+            if (relDir && relDir !== '') {
+                const folderId = 'dir:' + relDir;
+                const folderName = path.basename(dir);
+                addNode(folderId, folderName, 'folder', relDir);
+
+                const parentDir = path.dirname(relDir).replace(/\\/g, '/');
+                if (parentDir && parentDir !== '.') {
+                    addEdge('dir:' + parentDir, folderId, 'contains', 'structure');
+                }
+            }
+
+            for (const entry of entries) {
+                if (entry.startsWith('.')) continue;
+                const fullPath = path.join(dir, entry);
+                const stat = fs.statSync(fullPath);
+                const relPath = path.relative(targetBundle.path, fullPath).replace(/\\/g, '/');
+
+                if (stat.isDirectory()) {
+                    scanForGraph(fullPath);
+                } else if (entry.endsWith('.md')) {
+                    fileMap.set(relPath, fullPath);
+                    fileMap.set(entry, fullPath); // fallback lookup by filename
+                    
+                    const fileName = path.basename(entry, '.md');
+                    addNode(relPath, fileName, 'file', relPath);
+
+                    const folderPath = path.dirname(relPath).replace(/\\/g, '/');
+                    if (folderPath && folderPath !== '.') {
+                        addEdge('dir:' + folderPath, relPath, 'contains', 'structure');
+                    }
+                }
+            }
+        }
+
+        scanForGraph(targetBundle.path);
+
+        // Parse markdown content for links and tags
+        for (const [relPath, fullPath] of fileMap.entries()) {
+            if (relPath.includes('/') || relPath.endsWith('.md')) {
+                try {
+                    const content = fs.readFileSync(fullPath, 'utf-8');
+                    
+                    // 1. Wikilinks [[target_file]]
+                    const wikilinkRegex = /\[\[([^\]\|]+)(?:\|[^\]]+)?\]\]/g;
+                    let match;
+                    while ((match = wikilinkRegex.exec(content)) !== null) {
+                        let target = match[1].trim();
+                        if (!target.endsWith('.md')) target += '.md';
+                        // find matching file in bundle
+                        let targetRel = Array.from(fileMap.keys()).find(k => k.toLowerCase() === target.toLowerCase() || k.toLowerCase().endsWith('/' + target.toLowerCase()));
+                        if (targetRel) {
+                            addEdge(relPath, targetRel, 'references', 'link');
+                        }
+                    }
+
+                    // 2. Standard markdown links [text](path.md)
+                    const mdLinkRegex = /\[([^\]]+)\]\(([^)]+\.md)(?:#[^)]*)?\)/g;
+                    while ((match = mdLinkRegex.exec(content)) !== null) {
+                        let linkPath = match[2].trim();
+                        // resolve relative path
+                        const currentDir = path.dirname(relPath);
+                        let resolvedRel = path.normalize(path.join(currentDir, linkPath)).replace(/\\/g, '/');
+                        if (fileMap.has(resolvedRel)) {
+                            addEdge(relPath, resolvedRel, 'links to', 'link');
+                        } else {
+                            // try matching filename
+                            const baseName = path.basename(linkPath);
+                            let targetRel = Array.from(fileMap.keys()).find(k => path.basename(k).toLowerCase() === baseName.toLowerCase());
+                            if (targetRel) {
+                                addEdge(relPath, targetRel, 'links to', 'link');
+                            }
+                        }
+                    }
+
+                    // 3. Hash tags #tag
+                    const tagRegex = /(?:^|\s)#([a-zA-Z0-9_\-\/]+)/g;
+                    while ((match = tagRegex.exec(content)) !== null) {
+                        const tag = match[1].toLowerCase();
+                        if (tag.length > 1 && !tag.match(/^\d+$/)) {
+                            const tagId = 'tag:' + tag;
+                            addNode(tagId, '#' + tag, 'tag', tag);
+                            addEdge(relPath, tagId, 'tagged', 'tag');
+                        }
+                    }
+                } catch (err) {
+                    console.error(`Error parsing graph links for ${relPath}:`, err);
+                }
+            }
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            bundle_id: targetBundle.id,
+            bundle_name: targetBundle.name,
+            nodes: Array.from(nodesMap.values()),
+            edges: Array.from(edgesMap.values())
+        }));
+        return;
+    }
+
     // 4. OKF FILE READ API
     if ((pathname === '/api/okf/file' || pathname === '/api/okf/raw') && req.method === 'GET') {
         const targetId = parsedUrl.query.bundle_id || activeBundleId;
